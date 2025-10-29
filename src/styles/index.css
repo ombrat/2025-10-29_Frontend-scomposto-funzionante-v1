@@ -1,0 +1,37 @@
+@import './variables.css';
+
+:root {
+  --bg: #0f0f0f;
+  --panel: #151515;
+  --muted: #999;
+  --accent: #66bb6a;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  font-family: Roboto, system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: #e6e6e6;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid rgba(255,255,255,0.03);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.layout-container {
+  display: grid;
+  grid-template-columns: 320px 1fr 360px;
+  gap: 18px;
+  padding: 22px;
+  max-width: 1300px;
+  margin: 18px auto;
+  box-sizing: border-box;
+}
+
+.layout-left { }
+.layout-center { }
+.layout-right { }

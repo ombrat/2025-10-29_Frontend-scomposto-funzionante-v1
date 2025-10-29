@@ -1,0 +1,7 @@
+.app-root-layout { min-height: 100vh; display: flex; flex-direction: column; }
+
+.panel { transition: box-shadow 0.12s ease; }
+.panel:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.45); }
+
+button { font-family: inherit; }
+input, select, textarea { font-family: inherit; }

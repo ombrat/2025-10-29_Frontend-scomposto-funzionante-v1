@@ -16,6 +16,16 @@ export default function EfficientFrontierInline({ frontierData, onSimulate, simu
   const WIDTH_DEFAULT = 1100;
   const HEIGHT_DEFAULT = 520;
   const MARGIN = 50;
+  
+  // Dot radius constants for different states
+  const DOT_RADIUS = {
+    EXTRA_NORMAL: 4,
+    EXTRA_HOVERED: 6,
+    EXTRA_SELECTED: 7,
+    HIGHLIGHT_NORMAL: 7,
+    HIGHLIGHT_HOVERED: 10,
+    HIGHLIGHT_SELECTED: 12
+  };
 
   const sims = frontierData.simulated_portfolios || frontierData.simulated || frontierData.simulations || [];
   
@@ -422,9 +432,9 @@ export default function EfficientFrontierInline({ frontierData, onSimulate, simu
   // Helper function to calculate dot radius based on point type and state
   const getDotRadius = (point, isHovered, isSelected) => {
     if (point.type === 'highlight') {
-      return isSelected ? 12 : (isHovered ? 10 : 7);
+      return isSelected ? DOT_RADIUS.HIGHLIGHT_SELECTED : (isHovered ? DOT_RADIUS.HIGHLIGHT_HOVERED : DOT_RADIUS.HIGHLIGHT_NORMAL);
     } else {
-      return isSelected ? 7 : (isHovered ? 6 : 4);
+      return isSelected ? DOT_RADIUS.EXTRA_SELECTED : (isHovered ? DOT_RADIUS.EXTRA_HOVERED : DOT_RADIUS.EXTRA_NORMAL);
     }
   };
 

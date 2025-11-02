@@ -434,6 +434,16 @@ export default function EfficientFrontierInline({ frontierData, onSimulate, simu
     if (!svgRefF.current) return null;
     const svgRect = svgRefF.current.getBoundingClientRect();
     
+    // Determine the radius of the dot based on its type and state
+    const isHovered = hoverPoint && hoverPoint.id === p.id;
+    const isSelected = selectedPoint && selectedPoint.id === p.id;
+    const dotRadius = p.type === 'highlight' 
+      ? (isSelected ? 12 : (isHovered ? 10 : 7))
+      : (isSelected ? 7 : (isHovered ? 6 : 4));
+    
+    // Convert radius from SVG units to pixels
+    const dotRadiusPx = dotRadius * (svgRect.width / WIDTH_DEFAULT);
+    
     // Converti coordinate SVG in pixel dell'SVG
     const leftPxRaw = (p.x / WIDTH_DEFAULT) * svgRect.width;
     const topPxRaw = (p.y / HEIGHT_DEFAULT) * svgRect.height;
@@ -446,11 +456,16 @@ export default function EfficientFrontierInline({ frontierData, onSimulate, simu
     const pointLeftInContainer = svgOffsetLeft + leftPxRaw;
     const pointTopInContainer = svgOffsetTop + topPxRaw;
     
+    // Position tooltip 8 pixels above the top edge of the dot
+    const topEdgeOfDot = pointTopInContainer - dotRadiusPx;
+    
     let left = pointLeftInContainer - tooltipWidth / 2;
     left = Math.max(8, Math.min(containerRect.width - tooltipWidth - 8, left));
-    let top = pointTopInContainer - approxHeight - offsetFromPoint;
+    let top = topEdgeOfDot - approxHeight - offsetFromPoint;
     if (top < 8) {
-      top = pointTopInContainer + offsetFromPoint;
+      // If not enough space above, position below the dot
+      const bottomEdgeOfDot = pointTopInContainer + dotRadiusPx;
+      top = bottomEdgeOfDot + offsetFromPoint;
       if (top + approxHeight > containerRect.height - 8) top = Math.max(8, containerRect.height - approxHeight - 8);
     }
     const boxStyle = {

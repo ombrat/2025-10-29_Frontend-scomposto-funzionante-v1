@@ -17,9 +17,6 @@ export default function EfficientFrontier({ frontierData }) {
     <div className="panel" style={{ padding: 12 }}>
       <h3 style={{ color: '#fff' }}>Frontiera Efficiente</h3>
       <p style={{ color: '#ccc' }}>Punti: {Array.isArray(frontierData.simulated_portfolios) ? frontierData.simulated_portfolios.length : 0}</p>
-      <div style={{ marginTop: 8 }}>
-        <pre style={{ color: '#ddd', fontSize: 12, maxHeight: 220, overflow: 'auto' }}>{JSON.stringify(frontierData, null, 2)}</pre>
-      </div>
     </div>
   );
 }

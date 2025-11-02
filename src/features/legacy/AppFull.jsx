@@ -1,3 +1,7 @@
+// diagnostica: segnala che AppFull (legacy) è stato caricato
+console.log('%c[APP] AppFull (legacy) carreggiato', 'color:#ff9800;font-weight:700');
+window.__APP_LOADED = 'AppFull';
+
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import axios from 'axios';
 

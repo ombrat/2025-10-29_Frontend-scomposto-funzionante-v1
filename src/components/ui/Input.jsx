@@ -1,18 +1,12 @@
 import React from 'react';
+import '../../styles/components.css';
 
-export default function Input(props) {
+export default function Input({ className = '', style = {}, ...props }) {
   return (
     <input
+      className={`input ${className}`}
+      style={style}
       {...props}
-      style={{
-        padding: '10px 12px',
-        background: '#1f1f1f',
-        color: '#fff',
-        border: '1px solid #333',
-        borderRadius: 8,
-        outline: 'none',
-        ...props.style
-      }}
     />
   );
 }

@@ -1,21 +1,17 @@
 import React from 'react';
+import '../../styles/components.css';
 
-export default function Button({ children, onClick, style = {}, disabled = false, type = 'button' }) {
+export default function Button({ children, onClick, variant = 'default', className = '', disabled = false, style = {}, ...rest }) {
+  const base = 'btn';
+  const vClass = variant === 'primary' ? 'btn-primary' : variant === 'accent' ? 'btn-accent' : variant === 'danger' ? 'btn-danger' : '';
   return (
     <button
-      type={type}
+      className={`${base} ${vClass} ${className}`}
       onClick={onClick}
       disabled={disabled}
-      style={{
-        padding: '8px 12px',
-        borderRadius: 8,
-        border: 'none',
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        background: disabled ? '#555' : '#1e88e5',
-        color: '#fff',
-        fontWeight: 700,
-        ...style
-      }}
+      aria-disabled={disabled}
+      style={style}
+      {...rest}
     >
       {children}
     </button>

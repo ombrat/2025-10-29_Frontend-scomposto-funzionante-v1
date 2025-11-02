@@ -419,6 +419,15 @@ export default function EfficientFrontierInline({ frontierData, onSimulate, simu
     else setSelectedPoint(p);
   };
 
+  // Helper function to calculate dot radius based on point type and state
+  const getDotRadius = (point, isHovered, isSelected) => {
+    if (point.type === 'highlight') {
+      return isSelected ? 12 : (isHovered ? 10 : 7);
+    } else {
+      return isSelected ? 7 : (isHovered ? 6 : 4);
+    }
+  };
+
   const renderJsonTooltip = (p) => {
     if (!p || !containerRefF.current) return null;
     const containerRect = containerRefF.current.getBoundingClientRect();
@@ -437,9 +446,7 @@ export default function EfficientFrontierInline({ frontierData, onSimulate, simu
     // Determine the radius of the dot based on its type and state
     const isHovered = hoverPoint && hoverPoint.id === p.id;
     const isSelected = selectedPoint && selectedPoint.id === p.id;
-    const dotRadius = p.type === 'highlight' 
-      ? (isSelected ? 12 : (isHovered ? 10 : 7))
-      : (isSelected ? 7 : (isHovered ? 6 : 4));
+    const dotRadius = getDotRadius(p, isHovered, isSelected);
     
     // Convert radius from SVG units to pixels
     const dotRadiusPx = dotRadius * (svgRect.width / WIDTH_DEFAULT);
@@ -707,7 +714,7 @@ export default function EfficientFrontierInline({ frontierData, onSimulate, simu
           {renderedPoints.filter(p => p.type === 'extra').map((p) => {
             const isHovered = hoverPoint && hoverPoint.id === p.id;
             const isSelected = selectedPoint && selectedPoint.id === p.id;
-            const r = isSelected ? 7 : (isHovered ? 6 : 4);
+            const r = getDotRadius(p, isHovered, isSelected);
             const opacity = isSelected ? 1 : (isHovered ? 1 : (hoverPoint ? 0.35 : 0.95));
             return (
               <circle key={p.id} cx={p.x} cy={p.y} r={r} fill={p.color} opacity={opacity} stroke={isSelected ? '#ffd54f' : '#222'} strokeWidth={isSelected ? 1.5 : 0.6} style={{ cursor: 'pointer' }} onClick={() => handlePointClickF(p)} />
@@ -717,7 +724,7 @@ export default function EfficientFrontierInline({ frontierData, onSimulate, simu
           {renderedPoints.filter(p => p.type === 'highlight').map((p) => {
             const isHovered = hoverPoint && hoverPoint.id === p.id;
             const isSelected = selectedPoint && selectedPoint.id === p.id;
-            const r = isSelected ? 12 : (isHovered ? 10 : 7);
+            const r = getDotRadius(p, isHovered, isSelected);
             const strokeWidth = isSelected ? 2 : (isHovered ? 1.5 : 1);
             const textX = p.x + 12;
             const textY = p.y - 10;

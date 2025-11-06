@@ -46,6 +46,50 @@
 }
 .panel-title-success { color: #39e06b; } /* brighter green */
 
+/* Animazione pulse per indicatori live */
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* Stili per categorie espandibili */
+.category-header {
+  transition: all 0.3s ease;
+}
+
+.category-header:hover {
+  background: rgba(255, 255, 255, 0.02) !important;
+}
+
+.series-card {
+  transition: all 0.2s ease;
+}
+
+.series-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+/* Scrollbar personalizzata per storico dati */
+.historical-data::-webkit-scrollbar {
+  width: 4px;
+}
+
+.historical-data::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+.historical-data::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+}
+
+.historical-data::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
 /* Muted small text */
 .small-muted, .label-muted, .text-muted {
   color: #cfcfcf;
@@ -480,6 +524,35 @@ input:focus-visible,
 select:focus-visible {
   outline: 2px solid #66bb6a;
   outline-offset: 2px;
+}
+
+/* ============================================================
+   HISTORICAL DATA SCROLLBAR CUSTOMIZATION
+   ============================================================ */
+
+/* Stile personalizzato per le scrollbar dei dati storici */
+.historical-data {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.1);
+}
+
+.historical-data::-webkit-scrollbar {
+  width: 8px;
+}
+
+.historical-data::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.historical-data::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.historical-data::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 /* ============================================================

@@ -427,32 +427,29 @@ export default function EfficientFrontierInline({ frontierData, onSimulate, simu
     const baseWidth = estimateTextWidth(baseText, 13);
     const compWidth = compList.length > 0 ? Math.max(...compList.map(([tkr, pct]) => estimateTextWidth(`${tkr} ${Number(pct).toFixed(2)}%`, 12)), 0) : 0;
     const tooltipWidth = Math.min(380, Math.max(140, Math.max(baseWidth, compWidth) + 30));
-    const approxHeight = 70 + compList.length * 18;
+    // Calcolo altezza tooltip semplificato (senza composizione)
+    const labelHeight = 20; // label principale + marginBottom
+    const metricsGridHeight = 50; // griglia con Return, Volatility, Sharpe, Max DD
+    const paddingAndMargins = 25; // padding del box + margini interni
+    const approxHeight = labelHeight + metricsGridHeight + paddingAndMargins;
     const offsetFromPoint = 8;
     
-    // Ottieni le dimensioni effettive dell'SVG
+    // CORREZIONE DEFINITIVA: usa coordinate assolute per eliminare discrepanze
     if (!svgRefF.current) return null;
     const svgRect = svgRefF.current.getBoundingClientRect();
     
-    // Converti coordinate SVG in pixel dell'SVG
-    const leftPxRaw = (p.x / WIDTH_DEFAULT) * svgRect.width;
-    const topPxRaw = (p.y / HEIGHT_DEFAULT) * svgRect.height;
+    // Calcola la posizione assoluta del punto nello schermo
+    const pointAbsoluteX = svgRect.left + (p.x / WIDTH_DEFAULT) * svgRect.width;
+    const pointAbsoluteY = svgRect.top + (p.y / HEIGHT_DEFAULT) * svgRect.height;
     
-    // Calcola offset dall'SVG al container
-    const svgOffsetLeft = svgRect.left - containerRect.left;
-    const svgOffsetTop = svgRect.top - containerRect.top;
+    // Converti in coordinate relative al container
+    const leftPxRaw = pointAbsoluteX - containerRect.left;
+    const topPxRaw = pointAbsoluteY - containerRect.top;
     
-    // Coordinate del punto rispetto al container
-    const pointLeftInContainer = svgOffsetLeft + leftPxRaw;
-    const pointTopInContainer = svgOffsetTop + topPxRaw;
-    
-    let left = pointLeftInContainer - tooltipWidth / 2;
+    // Tooltip sempre sotto al dot + 8 pixel
+    let left = leftPxRaw - tooltipWidth / 2;
     left = Math.max(8, Math.min(containerRect.width - tooltipWidth - 8, left));
-    let top = pointTopInContainer - approxHeight - offsetFromPoint;
-    if (top < 8) {
-      top = pointTopInContainer + offsetFromPoint;
-      if (top + approxHeight > containerRect.height - 8) top = Math.max(8, containerRect.height - approxHeight - 8);
-    }
+    let top = topPxRaw + offsetFromPoint;
     const boxStyle = {
       position: 'absolute',
       left,
@@ -483,52 +480,7 @@ export default function EfficientFrontierInline({ frontierData, onSimulate, simu
             <div><span style={{ color: '#ef5350', fontWeight: 700 }}>{Math.abs(p.max_drawdown).toFixed(2)}%</span> <span style={{ color: '#999' }}>Max DD</span></div>
           )}
         </div>
-        {compList.length > 0 ? (
-          <div style={{ maxHeight: 160, overflowY: 'auto', paddingRight: 6 }}>
-            <div style={{ color: '#ddd', fontWeight: 700, marginBottom: 8, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Composizione Portafoglio</div>
-            <div style={{ display: 'grid', gap: 3 }}>
-              {compList
-                .sort(([, a], [, b]) => Number(b) - Number(a))
-                .map(([tkr, pct]) => {
-                  const percentage = Number(pct);
-                  const barWidth = Math.max(2, (percentage / Math.max(...compList.map(([, p]) => Number(p)))) * 100);
-                  return (
-                    <div key={tkr} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 0' }}>
-                      <div style={{ 
-                        minWidth: 40, 
-                        textAlign: 'right', 
-                        color: '#fff', 
-                        fontWeight: 600, 
-                        fontSize: 11 
-                      }}>{tkr}</div>
-                      <div style={{ 
-                        flex: 1, 
-                        height: 8, 
-                        background: '#2a2a2a', 
-                        borderRadius: 4, 
-                        overflow: 'hidden',
-                        position: 'relative'
-                      }}>
-                        <div style={{ 
-                          width: `${barWidth}%`, 
-                          height: '100%', 
-                          background: 'linear-gradient(90deg, #66bb6a, #81c784)',
-                          borderRadius: 4
-                        }} />
-                      </div>
-                      <div style={{ 
-                        minWidth: 42, 
-                        textAlign: 'right', 
-                        color: '#ccc', 
-                        fontWeight: 700, 
-                        fontSize: 11 
-                      }}>{percentage.toFixed(1)}%</div>
-                    </div>
-                  );
-                })}
-            </div>
-          </div>
-        ) : (<div style={{ color: '#999', fontSize: 11 }}>Composizione non disponibile</div>)}
+
       </div>
     );
   };

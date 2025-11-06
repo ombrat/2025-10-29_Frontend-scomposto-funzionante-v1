@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug MacroService</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .log { background: #000; color: #0f0; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .error { color: #f00; }
+        .debug { color: #ff0; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug MacroService</h1>
+    <button onclick="testMacroService()">Test MacroService</button>
+    <div id="logs"></div>
+
+    <script type="module">
+        import macroService from './src/services/macroService.js';
+        import backendService from './src/services/backendService.js';
+
+        window.testMacroService = async function() {
+            const logsDiv = document.getElementById('logs');
+            logsDiv.innerHTML = '<div class="log">🚀 Avvio test MacroService...</div>';
+            
+            try {
+                // Test 1: Health check backend
+                logsDiv.innerHTML += '<div class="log">📡 Test 1: Backend Health Check</div>';
+                const health = await backendService.checkHealth();
+                logsDiv.innerHTML += `<div class="log">✅ Backend OK: ${JSON.stringify(health)}</div>`;
+
+                // Test 2: Fred releases
+                logsDiv.innerHTML += '<div class="log">📅 Test 2: Fred Releases</div>';
+                const releases = await backendService.getReleases({ limit: 3 });
+                logsDiv.innerHTML += `<div class="log">✅ Releases: ${JSON.stringify(releases, null, 2)}</div>`;
+
+                // Test 3: Serie specifica
+                logsDiv.innerHTML += '<div class="log">📊 Test 3: Serie UNRATE</div>';
+                const unrateData = await backendService.getSeriesHistory('UNRATE', 1);
+                logsDiv.innerHTML += `<div class="log">✅ UNRATE: ${JSON.stringify(unrateData, null, 2)}</div>`;
+
+                // Test 4: MacroService completo
+                logsDiv.innerHTML += '<div class="log">🔄 Test 4: MacroService Complete</div>';
+                const macroData = await macroService.fetchMacroDataComplete(5);
+                logsDiv.innerHTML += `<div class="log">✅ MacroData: ${JSON.stringify(macroData, null, 2)}</div>`;
+
+            } catch (error) {
+                logsDiv.innerHTML += `<div class="log error">❌ Errore: ${error.message}</div>`;
+                console.error('Errore test:', error);
+            }
+        };
+
+        // Auto-start test
+        window.addEventListener('load', () => {
+            setTimeout(testMacroService, 1000);
+        });
+    </script>
+</body>
+</html>

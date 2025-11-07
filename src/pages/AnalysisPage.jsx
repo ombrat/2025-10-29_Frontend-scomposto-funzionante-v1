@@ -1,30 +1,36 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import macroService from '../services/macroService.js';
+
+// Layout e UI components come nel backtest
+import MainLayout from '../components/layout/MainLayout.jsx';
 import Spinner from '../components/ui/Spinner.jsx';
+import Button from '../components/ui/Button.jsx';
+import Input from '../components/ui/Input.jsx';
+
+// Stili come nel backtest
+import '../styles/index.css';
+import '../styles/components.css';
 
 /**
- * 📊 AnalysisPage v3.0 - UX Ottimizzata
+ * 📊 AnalysisPage v4.0 - Stile identico al BacktestPage
  * 
- * MIGLIORAMENTI UX:
- * - Design moderno con gradients e shadows
- * - Filtri e ricerca real-time
- * - Sparkline charts per trend visivi
- * - Layout responsive e grid system
- * - Colori e icone per categorie
- * - Animazioni e transizioni smooth
- * - States management ottimizzato
+ * LAYOUT COPIATO:
+ * - Stesso MainLayout a 3 colonne del backtest
+ * - Panel style identico con tema scuro
+ * - Stessi colori, tipografia e spacing
+ * - Stessa logica di layout responsivo
  */
 export default function AnalysisPage() {
   const [macroData, setMacroData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [expandedCategories, setExpandedCategories] = useState({});
   const [expandedIndicators, setExpandedIndicators] = useState({});
   const [loadingLogs, setLoadingLogs] = useState([]);
   
-  // Filtri UX
+  // Filtri - stile backtest
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [viewMode, setViewMode] = useState('cards'); // cards | compact | detailed
 
   useEffect(() => {
     loadMacroData();
@@ -42,13 +48,13 @@ export default function AnalysisPage() {
     setLoadingLogs([]);
     
     try {
-      addLog('🚀 Inizializzazione sistema di analisi...');
+      addLog('🚀 Inizializzazione sistema analisi economica...');
       addLog('🌐 Connessione Google Cloud Run FRED API...');
       
       const data = await macroService.fetchMacroDataComplete(70);
       
-      addLog(`✅ Sistema pronto: ${data.metadata?.totalIndicators || 0} indicatori attivi`);
-      addLog(`📊 Database: ${data.metadata?.totalDataPoints?.toLocaleString() || 0} punti dati caricati`);
+      addLog(`✅ Sistema pronto: ${data.metadata?.totalIndicators || 0} indicatori`);
+      addLog(`📊 Database: ${data.metadata?.totalDataPoints?.toLocaleString() || 0} punti dati`);
       
       setMacroData(data);
       setLoading(false);
@@ -61,105 +67,32 @@ export default function AnalysisPage() {
     }
   };
 
-  // Configurazione categorie con colori e design
+  // Configurazione categorie - stile backtest
   const getCategoryConfig = (categoryKey) => {
     const configs = {
-      'gdp_growth': {
-        name: 'PIL e Crescita',
-        icon: '🏛️',
-        gradient: 'from-blue-500 to-blue-700',
-        color: 'blue',
-        description: 'Indicatori di crescita economica e prodotto interno lordo'
-      },
-      'employment': {
-        name: 'Occupazione',
-        icon: '👥',
-        gradient: 'from-green-500 to-green-700',
-        color: 'green',
-        description: 'Mercato del lavoro, disoccupazione e forza lavoro'
-      },
-      'inflation': {
-        name: 'Inflazione',
-        icon: '📈',
-        gradient: 'from-red-500 to-red-700',
-        color: 'red',
-        description: 'Prezzi al consumo, inflazione core e aspettative'
-      },
-      'monetary_policy': {
-        name: 'Politica Monetaria',
-        icon: '💰',
-        gradient: 'from-yellow-500 to-yellow-700',
-        color: 'yellow',
-        description: 'Tassi di interesse e politiche della Federal Reserve'
-      },
-      'consumer': {
-        name: 'Consumi',
-        icon: '🛒',
-        gradient: 'from-purple-500 to-purple-700',
-        color: 'purple',
-        description: 'Spese dei consumatori, vendite retail e fiducia'
-      },
-      'housing': {
-        name: 'Immobiliare',
-        icon: '🏠',
-        gradient: 'from-indigo-500 to-indigo-700',
-        color: 'indigo',
-        description: 'Mercato immobiliare, costruzioni e mutui'
-      },
-      'manufacturing': {
-        name: 'Manifatturiero',
-        icon: '🏭',
-        gradient: 'from-gray-500 to-gray-700',
-        color: 'gray',
-        description: 'Produzione industriale e settore manifatturiero'
-      },
-      'trade': {
-        name: 'Commercio',
-        icon: '⚖️',
-        gradient: 'from-teal-500 to-teal-700',
-        color: 'teal',
-        description: 'Commercio internazionale e tassi di cambio'
-      },
-      'financial': {
-        name: 'Mercati',
-        icon: '💹',
-        gradient: 'from-pink-500 to-pink-700',
-        color: 'pink',
-        description: 'Mercati finanziari, indici azionari e volatilità'
-      },
-      'fiscal': {
-        name: 'Politica Fiscale',
-        icon: '🏛️',
-        gradient: 'from-orange-500 to-orange-700',
-        color: 'orange',
-        description: 'Debito pubblico, deficit e politiche fiscali'
-      }
+      'gdp_growth': { name: 'PIL e Crescita', icon: '🏛️', color: '#66bb6a' },
+      'employment': { name: 'Occupazione', icon: '👥', color: '#42a5f5' },
+      'inflation': { name: 'Inflazione', icon: '📈', color: '#ef5350' },
+      'monetary_policy': { name: 'Politica Monetaria', icon: '💰', color: '#ffa726' },
+      'consumer': { name: 'Consumi', icon: '🛒', color: '#ab47bc' },
+      'housing': { name: 'Immobiliare', icon: '🏠', color: '#5c6bc0' },
+      'manufacturing': { name: 'Manifatturiero', icon: '🏭', color: '#78909c' },
+      'trade': { name: 'Commercio', icon: '⚖️', color: '#26a69a' },
+      'financial': { name: 'Mercati', icon: '💹', color: '#ec407a' },
+      'fiscal': { name: 'Politica Fiscale', icon: '🏛️', color: '#ff7043' }
     };
     
     return configs[categoryKey] || {
-      name: categoryKey,
-      icon: '📊',
-      gradient: 'from-gray-400 to-gray-600',
-      color: 'gray',
-      description: 'Categoria economica'
+      name: categoryKey, icon: '📊', color: '#999'
     };
   };
 
-  const toggleIndicatorExpansion = (categoryKey, indicatorId) => {
-    const key = `${categoryKey}_${indicatorId}`;
-    setExpandedIndicators(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
-  };
-
-  // Formattazione valori intelligente
+  // Formattazione valori - stile backtest
   const formatValue = (value, indicator) => {
     if (value === null || value === undefined || value === '.') return 'N/A';
     const num = parseFloat(value);
     if (isNaN(num)) return 'N/A';
     
-    // Formattazione basata sul tipo di indicatore
     if (indicator?.id?.includes('RATE') || indicator?.id?.includes('DGS')) {
       return `${num.toFixed(2)}%`;
     }
@@ -169,56 +102,31 @@ export default function AnalysisPage() {
     return num.toFixed(2);
   };
 
-  // Mini sparkline component
-  const Sparkline = ({ data, color = 'blue' }) => {
-    if (!data || data.length < 2) return null;
-    
-    const values = data.map(d => parseFloat(d.value)).filter(v => !isNaN(v));
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-    const range = max - min;
-    
-    if (range === 0) return <div className="h-8 flex items-center text-gray-400 text-xs">Costante</div>;
-    
-    const points = values.slice(0, 10).map((value, index) => {
-      const x = (index / (Math.min(values.length - 1, 9))) * 60;
-      const y = 24 - ((value - min) / range) * 20;
-      return `${x},${y}`;
-    }).join(' ');
-
-    const trend = values[0] > values[values.length - 1] ? 'down' : 'up';
-    const trendColor = trend === 'up' ? 'text-green-500' : 'text-red-500';
-    
-    return (
-      <div className="flex items-center gap-2">
-        <svg width="64" height="28" className="flex-shrink-0">
-          <polyline
-            points={points}
-            fill="none"
-            stroke={trend === 'up' ? '#10b981' : '#ef4444'}
-            strokeWidth="1.5"
-            className="opacity-70"
-          />
-        </svg>
-        <span className={`text-xs ${trendColor} font-medium`}>
-          {trend === 'up' ? '↗️' : '↘️'}
-        </span>
-      </div>
-    );
+  const toggleCategory = (categoryKey) => {
+    setExpandedCategories(prev => ({
+      ...prev,
+      [categoryKey]: !prev[categoryKey]
+    }));
   };
 
-  // Filtri e ricerca
+  const toggleIndicator = (categoryKey, indicatorId) => {
+    const key = `${categoryKey}_${indicatorId}`;
+    setExpandedIndicators(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
+
+  // Filtri - stile backtest
   const filteredData = useMemo(() => {
     if (!macroData?.indicators) return {};
     
     let filtered = { ...macroData.indicators };
     
-    // Filtro per categoria
     if (selectedCategory !== 'all') {
       filtered = { [selectedCategory]: filtered[selectedCategory] };
     }
     
-    // Filtro per ricerca
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
       Object.keys(filtered).forEach(categoryKey => {
@@ -233,324 +141,432 @@ export default function AnalysisPage() {
     return filtered;
   }, [macroData, selectedCategory, searchTerm]);
 
-  const renderIndicatorCard = (indicator, categoryKey) => {
-    const key = `${categoryKey}_${indicator.id}`;
-    const isExpanded = expandedIndicators[key];
-    const observations = indicator.observations || [];
-    const config = getCategoryConfig(categoryKey);
-    
-    const recentData = observations.slice(0, 5);
-    const displayData = isExpanded ? observations.slice(0, 50) : recentData;
-    
-    if (observations.length === 0) {
-      return (
-        <div key={indicator.id} className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-          <div className="flex items-center gap-3 mb-4">
-            <div className={`w-10 h-10 rounded-lg bg-gradient-to-r ${config.gradient} flex items-center justify-center text-white font-bold`}>
-              {indicator.id.slice(0, 2)}
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-800">{indicator.name}</h3>
-              <p className="text-sm text-gray-500">{indicator.id}</p>
-            </div>
-          </div>
-          <div className="text-center py-8 text-gray-400">
-            <div className="text-3xl mb-2">📊</div>
-            <p>Nessun dato disponibile</p>
-          </div>
-        </div>
-      );
-    }
-    
-    const latestValue = recentData[0];
-    const prevValue = recentData[1];
-    const change = prevValue ? parseFloat(latestValue.value) - parseFloat(prevValue.value) : null;
-    const changePercent = prevValue && parseFloat(prevValue.value) !== 0 ? 
-      ((parseFloat(latestValue.value) - parseFloat(prevValue.value)) / parseFloat(prevValue.value) * 100) : null;
-    
-    return (
-      <div key={indicator.id} className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 border border-gray-100 overflow-hidden">
-        {/* Header con gradiente */}
-        <div className={`bg-gradient-to-r ${config.gradient} p-4 text-white`}>
-          <div className="flex justify-between items-start">
-            <div className="flex-1">
-              <h3 className="font-bold text-lg mb-1">{indicator.name}</h3>
-              <p className="text-xs opacity-90">{indicator.id}</p>
-            </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold">
-                {formatValue(latestValue?.value, indicator)}
-              </div>
-              <div className="text-xs opacity-75">
-                {latestValue?.date}
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Contenuto principale */}
-        <div className="p-4">
-          {/* Trend e sparkline */}
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center gap-3">
-              {change !== null && (
-                <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                  change > 0 ? 'bg-green-100 text-green-800' : change < 0 ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
-                }`}>
-                  <span>{change > 0 ? '↗️' : change < 0 ? '↘️' : '➡️'}</span>
-                  <span>
-                    {change > 0 ? '+' : ''}{formatValue(change, indicator)}
-                    {changePercent !== null && ` (${changePercent.toFixed(1)}%)`}
-                  </span>
-                </div>
-              )}
-            </div>
-            <Sparkline data={recentData} color={config.color} />
-          </div>
-          
-          {/* Descrizione */}
-          <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-            {indicator.description}
-          </p>
-          
-          {/* Dati recenti */}
-          <div className="space-y-2 mb-4">
-            <h4 className="font-medium text-gray-700 text-sm mb-2">
-              {isExpanded ? `Ultimi ${Math.min(50, observations.length)} dati` : 'Ultimi 5 movimenti'}
-            </h4>
-            
-            <div className={`space-y-1 ${isExpanded ? 'max-h-60 overflow-y-auto' : ''}`}>
-              {displayData.map((obs, index) => (
-                <div 
-                  key={`${obs.date}_${index}`} 
-                  className="flex justify-between items-center p-2 bg-gray-50 rounded text-sm"
-                >
-                  <span className="font-mono text-gray-600">{obs.date}</span>
-                  <span className="font-semibold">{formatValue(obs.value, indicator)}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          {/* Controlli */}
-          <div className="flex justify-between items-center pt-3 border-t border-gray-100">
-            <div className="text-xs text-gray-500">
-              {observations.length} osservazioni totali
-            </div>
-            
-            {observations.length > 5 && (
-              <button
-                onClick={() => toggleIndicatorExpansion(categoryKey, indicator.id)}
-                className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
-                  isExpanded 
-                    ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' 
-                    : `bg-${config.color}-100 text-${config.color}-700 hover:bg-${config.color}-200`
-                }`}
-              >
-                {isExpanded ? '🔼 Comprimi' : '🔽 Espandi tutto'}
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
+  // Loading state - stile backtest
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-full shadow-lg mb-4">
-              <Spinner size="large" />
-            </div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">
-              Sistema di Analisi Economica
-            </h1>
-            <p className="text-gray-600">
-              Caricamento indicatori FRED da Google Cloud Run...
+      <MainLayout
+        center={
+          <div className="panel" style={{ textAlign: 'center', padding: '40px 20px' }}>
+            <Spinner />
+            <h2 style={{ 
+              color: '#fff', 
+              marginTop: '20px', 
+              marginBottom: '10px',
+              fontSize: '24px'
+            }}>
+              📊 Caricamento Analisi Economica
+            </h2>
+            <p style={{ color: '#999', fontSize: '16px', marginBottom: '30px' }}>
+              Connessione a Google Cloud Run FRED API...
             </p>
-          </div>
-          
-          {/* Log di caricamento con design migliorato */}
-          <div className="bg-white rounded-xl shadow-lg p-6 max-w-2xl mx-auto">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-              <h3 className="font-semibold text-gray-800">Stato del sistema</h3>
+            
+            {/* Log panel - stile backtest */}
+            <div className="card" style={{ marginTop: '20px', textAlign: 'left' }}>
+              <div className="card-header">
+                🔄 Log di Sistema
+              </div>
+              <div style={{ fontFamily: 'monospace', fontSize: '13px' }}>
+                {loadingLogs.map((log, index) => (
+                  <div key={index} style={{ 
+                    color: '#cfcfcf', 
+                    marginBottom: '4px',
+                    paddingLeft: '10px',
+                    borderLeft: '2px solid #66bb6a'
+                  }}>
+                    {log}
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="space-y-2">
-              {loadingLogs.map((log, index) => (
-                <div key={index} className="flex items-center gap-3 py-1">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <span className="font-mono text-sm text-gray-700">{log}</span>
-                </div>
-              ))}
-            </div>
           </div>
-        </div>
-      </div>
+        }
+      />
     );
   }
 
+  // Error state - stile backtest
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 p-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <div className="text-6xl mb-4">⚠️</div>
-            <h1 className="text-3xl font-bold text-red-800 mb-4">
+      <MainLayout
+        center={
+          <div className="panel" style={{ textAlign: 'center', padding: '40px 20px' }}>
+            <div style={{ fontSize: '48px', marginBottom: '20px' }}>⚠️</div>
+            <h2 style={{ color: '#ef5350', marginBottom: '20px' }}>
               Errore del Sistema
-            </h1>
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-              <p className="text-red-600 font-mono text-sm">{error}</p>
+            </h2>
+            <div className="card" style={{ 
+              background: 'rgba(239, 83, 80, 0.1)', 
+              border: '1px solid rgba(239, 83, 80, 0.3)',
+              marginBottom: '20px'
+            }}>
+              <p style={{ color: '#ef5350', fontFamily: 'monospace', fontSize: '13px' }}>
+                {error}
+              </p>
             </div>
-            <button
-              onClick={loadMacroData}
-              className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors"
-            >
+            <Button onClick={loadMacroData} style={{ minWidth: '150px' }}>
               🔄 Riprova Connessione
-            </button>
+            </Button>
           </div>
-        </div>
-      </div>
+        }
+      />
     );
   }
 
   const indicators = macroData?.indicators || {};
   const metadata = macroData?.metadata || {};
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      {/* Header fisso */}
-      <div className="sticky top-0 bg-white shadow-lg border-b border-gray-200 z-10">
-        <div className="max-w-7xl mx-auto p-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                📊 Analisi Economica FRED
-              </h1>
-              <p className="text-gray-600">
-                Sistema di monitoraggio indicatori Federal Reserve
-              </p>
-            </div>
-            
-            {/* Controlli */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              {/* Ricerca */}
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="🔍 Cerca indicatori..."
-                  className="pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-64"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              
-              {/* Filtro categoria */}
-              <select
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-              >
-                <option value="all">🌐 Tutte le Categorie</option>
-                {Object.keys(indicators).map(categoryKey => (
-                  <option key={categoryKey} value={categoryKey}>
-                    {getCategoryConfig(categoryKey).icon} {getCategoryConfig(categoryKey).name}
-                  </option>
-                ))}
-              </select>
-              
-              {/* Refresh */}
-              <button
-                onClick={loadMacroData}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors whitespace-nowrap"
-              >
-                🔄 Aggiorna
-              </button>
-            </div>
-          </div>
+  // LEFT SIDEBAR - Controlli stile backtest
+  const leftSidebar = (
+    <div>
+      {/* Header controls */}
+      <div className="panel">
+        <div className="panel-title">📊 Analisi Economica</div>
+        <p style={{ color: '#cfcfcf', fontSize: '14px', marginBottom: '20px' }}>
+          Sistema di monitoraggio indicatori Federal Reserve
+        </p>
+        
+        {/* Search */}
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{ color: '#fff', fontSize: '14px', fontWeight: '600', display: 'block', marginBottom: '6px' }}>
+            🔍 Ricerca Indicatori
+          </label>
+          <Input
+            type="text"
+            placeholder="Cerca per nome o ID..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ width: '100%' }}
+          />
         </div>
+        
+        {/* Category filter */}
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{ color: '#fff', fontSize: '14px', fontWeight: '600', display: 'block', marginBottom: '6px' }}>
+            🏷️ Categoria
+          </label>
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '8px 12px',
+              background: '#0a0a0a',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '6px',
+              color: '#fff',
+              fontSize: '14px'
+            }}
+          >
+            <option value="all">🌐 Tutte le Categorie</option>
+            {Object.keys(indicators).map(categoryKey => {
+              const config = getCategoryConfig(categoryKey);
+              return (
+                <option key={categoryKey} value={categoryKey}>
+                  {config.icon} {config.name}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+        
+        <Button onClick={loadMacroData} style={{ width: '100%', marginTop: '10px' }}>
+          🔄 Aggiorna Dati
+        </Button>
       </div>
 
-      <div className="max-w-7xl mx-auto p-6">
-        {/* Dashboard stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-xl shadow-md p-4 border-l-4 border-blue-500">
-            <div className="text-2xl font-bold text-blue-600 mb-1">
+      {/* Stats panel - stile backtest */}
+      <div className="panel">
+        <div className="panel-title">📈 Statistiche Sistema</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div className="card tight">
+            <div style={{ color: '#66bb6a', fontSize: '20px', fontWeight: '700' }}>
               {metadata.totalIndicators || 0}
             </div>
-            <div className="text-sm text-gray-600">Indicatori Attivi</div>
+            <div style={{ color: '#cfcfcf', fontSize: '12px' }}>Indicatori</div>
           </div>
-          
-          <div className="bg-white rounded-xl shadow-md p-4 border-l-4 border-green-500">
-            <div className="text-2xl font-bold text-green-600 mb-1">
+          <div className="card tight">
+            <div style={{ color: '#42a5f5', fontSize: '20px', fontWeight: '700' }}>
               {metadata.totalDataPoints?.toLocaleString() || 0}
             </div>
-            <div className="text-sm text-gray-600">Punti Dati</div>
+            <div style={{ color: '#cfcfcf', fontSize: '12px' }}>Punti Dati</div>
           </div>
-          
-          <div className="bg-white rounded-xl shadow-md p-4 border-l-4 border-purple-500">
-            <div className="text-2xl font-bold text-purple-600 mb-1">
+          <div className="card tight">
+            <div style={{ color: '#ffa726', fontSize: '20px', fontWeight: '700' }}>
               {metadata.yearsRequested || 0}
             </div>
-            <div className="text-sm text-gray-600">Anni Storia</div>
+            <div style={{ color: '#cfcfcf', fontSize: '12px' }}>Anni Storia</div>
           </div>
-          
-          <div className="bg-white rounded-xl shadow-md p-4 border-l-4 border-orange-500">
-            <div className="text-2xl font-bold text-orange-600 mb-1">
+          <div className="card tight">
+            <div style={{ color: '#66bb6a', fontSize: '16px', fontWeight: '700' }}>
               ✅
             </div>
-            <div className="text-sm text-gray-600">Google Cloud Run</div>
+            <div style={{ color: '#cfcfcf', fontSize: '12px' }}>Cloud Run</div>
           </div>
-        </div>
-
-        {/* Categorie di indicatori */}
-        <div className="space-y-8">
-          {Object.keys(filteredData).map((categoryKey) => {
-            const categoryIndicators = filteredData[categoryKey];
-            const config = getCategoryConfig(categoryKey);
-            
-            if (categoryIndicators.length === 0) return null;
-            
-            return (
-              <div key={categoryKey} className="mb-8">
-                {/* Header categoria */}
-                <div className={`bg-gradient-to-r ${config.gradient} rounded-xl p-6 mb-6 text-white`}>
-                  <div className="flex items-center gap-4">
-                    <div className="text-4xl">{config.icon}</div>
-                    <div className="flex-1">
-                      <h2 className="text-2xl font-bold mb-1">
-                        {config.name}
-                      </h2>
-                      <p className="opacity-90 text-sm">
-                        {config.description}
-                      </p>
-                      <div className="flex items-center gap-4 mt-2 text-xs opacity-75">
-                        <span>📊 {categoryIndicators.length} indicatori</span>
-                        <span>🔄 Aggiornato in tempo reale</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Grid di indicatori */}
-                <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                  {categoryIndicators.map((indicator) => 
-                    renderIndicatorCard(indicator, categoryKey)
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Footer */}
-        <div className="mt-12 text-center text-gray-500 text-sm">
-          <p>Dati forniti da Federal Reserve Economic Data (FRED) via Google Cloud Run</p>
-          <p className="mt-1">Ultimo aggiornamento: {new Date(metadata.lastUpdate).toLocaleString()}</p>
         </div>
       </div>
     </div>
+  );
+
+  // CENTER - Main content stile backtest
+  const centerContent = (
+    <div>
+      {/* Main header */}
+      <div className="panel" style={{ marginBottom: '20px' }}>
+        <h1 style={{ 
+          fontSize: '28px', 
+          color: '#fff', 
+          marginBottom: '10px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px'
+        }}>
+          📊 Indicatori Economici FRED
+        </h1>
+        <p style={{ color: '#999', fontSize: '16px', margin: 0, lineHeight: 1.4 }}>
+          Monitoraggio in tempo reale di {metadata.totalIndicators || 32} indicatori economici principali 
+          con {metadata.yearsRequested || 70} anni di dati storici dalla Federal Reserve.
+        </p>
+      </div>
+
+      {/* Categories */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {Object.keys(filteredData).map((categoryKey) => {
+          const categoryIndicators = filteredData[categoryKey];
+          const config = getCategoryConfig(categoryKey);
+          const isExpanded = expandedCategories[categoryKey];
+          
+          if (categoryIndicators.length === 0) return null;
+          
+          return (
+            <div key={categoryKey} className="panel">
+              {/* Category header - clickable */}
+              <div 
+                className="category-header"
+                onClick={() => toggleCategory(categoryKey)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  cursor: 'pointer',
+                  padding: '8px',
+                  borderRadius: '8px',
+                  background: 'rgba(255, 255, 255, 0.01)',
+                  border: `1px solid ${config.color}20`,
+                  marginBottom: isExpanded ? '16px' : '0'
+                }}
+              >
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '8px',
+                  background: config.color,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '20px'
+                }}>
+                  {config.icon}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <h3 style={{ 
+                    color: '#fff', 
+                    fontSize: '18px', 
+                    margin: '0 0 4px 0',
+                    fontWeight: '700'
+                  }}>
+                    {config.name}
+                  </h3>
+                  <p style={{ 
+                    color: '#cfcfcf', 
+                    fontSize: '13px', 
+                    margin: 0 
+                  }}>
+                    {categoryIndicators.length} indicatori disponibili
+                  </p>
+                </div>
+                <div style={{ color: config.color, fontSize: '18px' }}>
+                  {isExpanded ? '🔼' : '🔽'}
+                </div>
+              </div>
+
+              {/* Indicators list */}
+              {isExpanded && (
+                <div style={{ display: 'grid', gap: '12px' }}>
+                  {categoryIndicators.map((indicator) => {
+                    const key = `${categoryKey}_${indicator.id}`;
+                    const isIndicatorExpanded = expandedIndicators[key];
+                    const observations = indicator.observations || [];
+                    const recentData = observations.slice(0, 5);
+                    
+                    if (observations.length === 0) {
+                      return (
+                        <div key={indicator.id} className="card series-card">
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <div style={{
+                              width: '32px',
+                              height: '32px',
+                              borderRadius: '6px',
+                              background: config.color,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '14px',
+                              fontWeight: '700',
+                              color: '#000'
+                            }}>
+                              {indicator.id.slice(0, 2)}
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <h4 style={{ color: '#fff', margin: '0 0 4px 0', fontSize: '15px' }}>
+                                {indicator.name}
+                              </h4>
+                              <p style={{ color: '#cfcfcf', fontSize: '12px', margin: 0 }}>
+                                {indicator.id} - Nessun dato disponibile
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+                    
+                    const latestValue = recentData[0];
+                    const prevValue = recentData[1];
+                    const change = prevValue ? parseFloat(latestValue.value) - parseFloat(prevValue.value) : null;
+                    
+                    return (
+                      <div key={indicator.id} className="card series-card">
+                        {/* Indicator header */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                          <div style={{
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: '6px',
+                            background: config.color,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '14px',
+                            fontWeight: '700',
+                            color: '#000'
+                          }}>
+                            {indicator.id.slice(0, 2)}
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <h4 style={{ color: '#fff', margin: '0 0 4px 0', fontSize: '15px' }}>
+                              {indicator.name}
+                            </h4>
+                            <p style={{ color: '#cfcfcf', fontSize: '12px', margin: 0 }}>
+                              {indicator.id}
+                            </p>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ 
+                              color: '#fff', 
+                              fontSize: '18px', 
+                              fontWeight: '700',
+                              marginBottom: '2px'
+                            }}>
+                              {formatValue(latestValue?.value, indicator)}
+                            </div>
+                            {change !== null && (
+                              <div style={{
+                                color: change > 0 ? '#66bb6a' : change < 0 ? '#ef5350' : '#999',
+                                fontSize: '12px',
+                                fontWeight: '600'
+                              }}>
+                                {change > 0 ? '+' : ''}{formatValue(change, indicator)}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Recent data */}
+                        <div style={{ marginBottom: '12px' }}>
+                          <div style={{ 
+                            color: '#cfcfcf', 
+                            fontSize: '13px', 
+                            marginBottom: '8px',
+                            fontWeight: '600'
+                          }}>
+                            {isIndicatorExpanded ? `Ultimi ${Math.min(50, observations.length)} dati` : 'Ultimi 5 movimenti'}
+                          </div>
+                          
+                          <div className="historical-data" style={{
+                            maxHeight: isIndicatorExpanded ? '200px' : 'auto',
+                            overflowY: isIndicatorExpanded ? 'auto' : 'visible',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '4px'
+                          }}>
+                            {(isIndicatorExpanded ? observations.slice(0, 50) : recentData).map((obs, index) => (
+                              <div 
+                                key={`${obs.date}_${index}`}
+                                style={{
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                  padding: '6px 8px',
+                                  background: 'rgba(255, 255, 255, 0.02)',
+                                  borderRadius: '4px',
+                                  fontSize: '13px'
+                                }}
+                              >
+                                <span style={{ color: '#cfcfcf', fontFamily: 'monospace' }}>
+                                  {obs.date}
+                                </span>
+                                <span style={{ color: '#fff', fontWeight: '600' }}>
+                                  {formatValue(obs.value, indicator)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Controls */}
+                        <div style={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between', 
+                          alignItems: 'center',
+                          paddingTop: '8px',
+                          borderTop: '1px solid rgba(255, 255, 255, 0.05)'
+                        }}>
+                          <span style={{ color: '#cfcfcf', fontSize: '12px' }}>
+                            {observations.length} osservazioni totali
+                          </span>
+                          
+                          {observations.length > 5 && (
+                            <Button
+                              onClick={() => toggleIndicator(categoryKey, indicator.id)}
+                              style={{
+                                padding: '4px 8px',
+                                fontSize: '12px',
+                                minWidth: 'auto',
+                                background: isIndicatorExpanded 
+                                  ? 'rgba(255, 255, 255, 0.1)' 
+                                  : `${config.color}20`,
+                                border: `1px solid ${isIndicatorExpanded ? 'rgba(255, 255, 255, 0.2)' : config.color}40`
+                              }}
+                            >
+                              {isIndicatorExpanded ? '🔼 Comprimi' : '🔽 Espandi tutto'}
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  return (
+    <MainLayout
+      left={leftSidebar}
+      center={centerContent}
+    />
   );
 }

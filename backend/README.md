@@ -1,28 +1,26 @@
 # Backend Services
 
-Questa cartella contiene tutti i servizi backend organizzati per tipo di API.
+Questa cartella contiene i servizi backend **SOLO** per le news locali.
 
 ## Struttura
 
 ```
 backend/
-├── backend-fred/     # Proxy per FRED (Federal Reserve Economic Data) API
-├── backend-news/     # Proxy per Alpha Vantage News API
+├── backend-news/     # Proxy per Alpha Vantage News API (solo locale)
 └── README.md        # Questo file
 ```
 
+**⚠️ IMPORTANTE**: I dati economici FRED vengono serviti dal backend esterno Google Cloud Run:
+- **FRED API**: `https://fred-api-proxy-21722357706.europe-west1.run.app`
+
 ## Porte utilizzate
 
-- **backend-fred**: porta 8000
-- **backend-news**: porta 8001
+- **backend-news**: porta 8001 (solo per news locali)
 
 ## Avvio rapido
 
 ```bash
-# Avvia backend FRED
-cd backend/backend-fred && ./start.sh
-
-# Avvia backend News (in un altro terminale)
+# Avvia SOLO backend News locale
 cd backend/backend-news && ./start.sh
 ```
 

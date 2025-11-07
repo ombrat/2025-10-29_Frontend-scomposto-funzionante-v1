@@ -13,22 +13,9 @@ gcloud init
 
 ### A. Ottimizza Dockerfile per Cloud Run
 
-**backend-fred/Dockerfile:**
-```dockerfile
-FROM python:3.11-slim
-
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY . .
-
-# Cloud Run usa PORT env variable
-ENV PORT=8080
-EXPOSE 8080
-
-CMD ["python", "app.py"]
-```
+**⚠️ OBSOLETO**: Il backend FRED è già deployato su Google Cloud Run:
+- URL: `https://fred-api-proxy-21722357706.europe-west1.run.app`
+- Non serve più deployare localmente
 
 ### B. Modifica app.py per Cloud Run
 

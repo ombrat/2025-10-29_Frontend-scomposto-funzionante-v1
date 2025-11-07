@@ -7,3 +7,7 @@ npm-debug.log
 yarn-error.log
 .idea/
 coverage/
+venv/
+__pycache__/
+*.pyc
+*.pyo

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Heatmap - UNRATE Issue</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: #1a1a1a; 
+            color: #fff;
+        }
+        .log { 
+            margin: 10px 0; 
+            padding: 10px; 
+            background: rgba(255,255,255,0.1); 
+            border-radius: 5px; 
+            font-size: 14px;
+        }
+        .error { 
+            background: rgba(239, 68, 68, 0.2); 
+            border-left: 3px solid #ef4444;
+        }
+        .success { 
+            background: rgba(34, 197, 94, 0.2); 
+            border-left: 3px solid #22c55e;
+        }
+        .debug { 
+            background: rgba(59, 130, 246, 0.2); 
+            border-left: 3px solid #3b82f6;
+        }
+        button {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        pre {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug Heatmap - UNRATE Problema</h1>
+    <p>Test specifico per capire perché l'indicatore UNRATE non viene visualizzato nella tabella</p>
+    
+    <button onclick="testHeatmapData()">🎯 Test Heatmap Data</button>
+    <button onclick="testUNRATESpecific()">📊 Test UNRATE Specifico</button>
+    <button onclick="testDateCalculations()">📅 Test Calcolo Date</button>
+    <button onclick="clearLogs()">🗑️ Pulisci Log</button>
+    
+    <div id="logs"></div>
+
+    <script type="module">
+        import macroService from './src/services/macroService.js';
+        
+        const logsDiv = document.getElementById('logs');
+        
+        function addLog(message, type = 'log') {
+            const logElement = document.createElement('div');
+            logElement.className = `log ${type}`;
+            logElement.innerHTML = message;
+            logsDiv.appendChild(logElement);
+            logElement.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        window.clearLogs = () => {
+            logsDiv.innerHTML = '';
+        };
+        
+        // Test 1: Verifica struttura dati heatmap
+        window.testHeatmapData = async () => {
+            try {
+                addLog('🎯 Test 1: Caricamento dati heatmap...', 'debug');
+                
+                const result = await macroService.fetchMacroDataComplete();
+                
+                addLog(`✅ Dati caricati. Struttura:`, 'success');
+                addLog(`<pre>${JSON.stringify({
+                    hasIndicators: !!result.indicators,
+                    indicatorsKeys: result.indicators ? Object.keys(result.indicators) : [],
+                    hasRawData: !!result.rawData,
+                    rawDataKeys: result.rawData ? Object.keys(result.rawData).slice(0, 5) : [],
+                    metadata: result.metadata || 'N/A'
+                }, null, 2)}</pre>`);
+                
+                // Cerca specificamente UNRATE
+                let unrateFound = false;
+                let unrateCategory = null;
+                let unrateData = null;
+                
+                if (result.indicators) {
+                    Object.keys(result.indicators).forEach(categoryKey => {
+                        result.indicators[categoryKey].forEach(indicator => {
+                            if (indicator.id === 'UNRATE') {
+                                unrateFound = true;
+                                unrateCategory = categoryKey;
+                                unrateData = indicator;
+                            }
+                        });
+                    });
+                }
+                
+                if (unrateFound) {
+                    addLog(`✅ UNRATE trovato nella categoria: ${unrateCategory}`, 'success');
+                    addLog(`📊 UNRATE dati:`, 'debug');
+                    addLog(`<pre>${JSON.stringify({
+                        id: unrateData.id,
+                        name: unrateData.name,
+                        observationsCount: unrateData.observations?.length || 0,
+                        firstObservations: unrateData.observations?.slice(0, 3),
+                        lastObservations: unrateData.observations?.slice(-3)
+                    }, null, 2)}</pre>`);
+                } else {
+                    addLog(`❌ UNRATE NON TROVATO nei dati!`, 'error');
+                    
+                    // Lista tutti gli indicatori disponibili
+                    const allIndicators = [];
+                    if (result.indicators) {
+                        Object.keys(result.indicators).forEach(categoryKey => {
+                            result.indicators[categoryKey].forEach(indicator => {
+                                allIndicators.push(`${indicator.id} (${categoryKey})`);
+                            });
+                        });
+                    }
+                    addLog(`📋 Indicatori disponibili: ${allIndicators.join(', ')}`, 'debug');
+                }
+                
+            } catch (error) {
+                addLog(`❌ Errore: ${error.message}`, 'error');
+                console.error('Errore test:', error);
+            }
+        };
+        
+        // Test 2: Test specifico UNRATE
+        window.testUNRATESpecific = async () => {
+            try {
+                addLog('📊 Test 2: Test specifico UNRATE...', 'debug');
+                
+                // Importa backendService per test diretto
+                const { default: backendService } = await import('./src/services/backendService.js');
+                
+                // Test health check
+                addLog('🔍 Test connessione backend...', 'debug');
+                const health = await backendService.checkHealth();
+                addLog(`✅ Backend health: ${JSON.stringify(health)}`, 'success');
+                
+                // Test caricamento diretto serie UNRATE
+                addLog('📈 Caricamento diretto serie UNRATE...', 'debug');
+                const unrateData = await backendService.getFredSeriesObservations('UNRATE', {
+                    limit: 50,
+                    sort_order: 'desc'
+                });
+                
+                addLog(`✅ UNRATE caricato:`, 'success');
+                addLog(`<pre>${JSON.stringify({
+                    title: unrateData.title,
+                    units: unrateData.units,
+                    observationsCount: unrateData.observations?.length || 0,
+                    firstFew: unrateData.observations?.slice(0, 5),
+                    lastFew: unrateData.observations?.slice(-3)
+                }, null, 2)}</pre>`);
+                
+            } catch (error) {
+                addLog(`❌ Errore test UNRATE: ${error.message}`, 'error');
+                console.error('Errore test UNRATE:', error);
+            }
+        };
+        
+        // Test 3: Test calcolo date
+        window.testDateCalculations = () => {
+            addLog('📅 Test 3: Test calcolo date...', 'debug');
+            
+            // Simula la logica della HeatmapPage
+            const now = new Date();
+            const periods = [];
+            
+            // Genera ultimi 6 mesi
+            for (let i = 5; i >= 0; i--) {
+                const date = new Date(now);
+                date.setMonth(date.getMonth() - i);
+                
+                const period = {
+                    label: date.toLocaleDateString('it-IT', { month: 'short', year: '2-digit' }),
+                    fullLabel: date.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' }),
+                    date: new Date(date),
+                    year: date.getFullYear(),
+                    month: date.getMonth() // 0-11
+                };
+                
+                periods.push(period);
+            }
+            
+            addLog(`📋 Periodi generati:`, 'debug');
+            addLog(`<pre>${JSON.stringify(periods.map(p => ({
+                label: p.label,
+                year: p.year,
+                month: p.month,
+                targetDate: new Date(p.year, p.month, 15).toISOString()
+            })), null, 2)}</pre>`);
+            
+            // Test data matching con dati mock
+            const mockObservations = [
+                { date: '2024-11-01', value: '4.1' },
+                { date: '2024-10-01', value: '4.0' },
+                { date: '2024-09-01', value: '4.2' },
+                { date: '2024-08-01', value: '4.3' },
+                { date: '2024-07-01', value: '4.0' },
+                { date: '2024-06-01', value: '3.8' }
+            ];
+            
+            const testPeriod = periods.find(p => p.label.includes('nov'));
+            if (testPeriod) {
+                addLog(`🎯 Test matching per periodo: ${testPeriod.label}`, 'debug');
+                
+                const targetDate = new Date(testPeriod.year, testPeriod.month, 15);
+                let bestMatch = null;
+                let minDistance = Infinity;
+                
+                mockObservations.forEach((obs, index) => {
+                    const obsDate = new Date(obs.date);
+                    const distance = Math.abs(obsDate - targetDate);
+                    const daysDiff = distance / (24 * 60 * 60 * 1000);
+                    
+                    addLog(`  📍 ${obs.date}: distanza ${daysDiff.toFixed(1)} giorni`);
+                    
+                    if (distance < minDistance && distance < 90 * 24 * 60 * 60 * 1000) {
+                        minDistance = distance;
+                        bestMatch = index;
+                    }
+                });
+                
+                if (bestMatch !== null) {
+                    addLog(`✅ Best match: ${mockObservations[bestMatch].date} = ${mockObservations[bestMatch].value}`, 'success');
+                } else {
+                    addLog(`❌ Nessun match trovato per ${testPeriod.label}`, 'error');
+                }
+            }
+        };
+
+        // Auto-start primo test
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                addLog('🚀 Avvio test automatico...', 'debug');
+                testHeatmapData();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

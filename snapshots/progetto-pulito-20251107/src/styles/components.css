@@ -1,0 +1,653 @@
+/* ============================================================
+   COMPONENTS.CSS - Stili condivisi (panels, cards, inputs, btns)
+   - Migliorato contrasto / leggibilità per somigliare al legacy
+   ============================================================ */
+
+/* Base panels/cards - maggiore contrasto e bordo più visibile */
+.panel {
+  background: linear-gradient(180deg, #0e0e0e, #0a0a0a);
+  border-radius: 10px;
+  padding: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  color: #f1f1f1;
+  margin-bottom: 18px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Tighter panel variant */
+.panel.tight {
+  padding: 12px 14px;
+}
+
+/* Card */
+.card {
+  background: linear-gradient(180deg, #0e0e0e, #0a0a0a);
+  border-radius: 10px;
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,0.04);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+  color: #f0f0f0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Card header/title */
+.card-header, .panel-title {
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+.panel-title {
+  font-size: 18px;
+  font-weight: 900;
+}
+.panel-title-success { color: #39e06b; } /* brighter green */
+
+/* Animazione pulse per indicatori live */
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* Stili per categorie espandibili */
+.category-header {
+  transition: all 0.3s ease;
+}
+
+.category-header:hover {
+  background: rgba(255, 255, 255, 0.02) !important;
+}
+
+.series-card {
+  transition: all 0.2s ease;
+}
+
+.series-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+/* Scrollbar personalizzata per storico dati */
+.historical-data::-webkit-scrollbar {
+  width: 4px;
+}
+
+.historical-data::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+.historical-data::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+}
+
+.historical-data::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Muted small text */
+.small-muted, .label-muted, .text-muted {
+  color: #cfcfcf;
+  font-size: 13px;
+}
+
+/* 📊 ANALYSIS PAGE UX ANIMATIONS - Stile Backtest Identico */
+
+/* Smooth slide down per categorie espanse */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 2000px;
+  }
+}
+
+/* Hover effects per category headers */
+.category-header {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.category-header:hover {
+  background: rgba(255, 255, 255, 0.03) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Series cards hover effects - identici al backtest */
+.series-card {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.series-card:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Scrollbar personalizzata per dati storici */
+.historical-data {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.05);
+}
+
+.historical-data::-webkit-scrollbar {
+  width: 6px;
+}
+
+.historical-data::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.historical-data::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+
+.historical-data::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Pulse effect per loading states */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Button micro-interactions - stile backtest */
+.btn, button {
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn:hover, button:hover {
+  transform: scale(1.02);
+}
+
+.btn:active, button:active {
+  transform: scale(0.98);
+}
+
+/* Input focus states - stile backtest */
+input, select {
+  transition: all 0.2s ease;
+}
+
+input:focus, select:focus {
+  border-color: rgba(102, 187, 106, 0.5) !important;
+  box-shadow: 0 0 0 2px rgba(102, 187, 106, 0.1) !important;
+}
+
+/* Chart wrapper (full width charts) */
+.chart-wrapper {
+  background: linear-gradient(180deg,#0d0d0d,#090909);
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.04);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Controls row under charts (buttons, export) */
+.controls-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+/* Performance Extreme panel styling (full width) */
+.performance-panel {
+  padding: 12px;
+  border-radius: 10px;
+}
+
+/* Drawdown summary small boxes above the drawdown chart */
+.drawdown-summary {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.drawdown-box {
+  background: linear-gradient(180deg,#171717,#141414);
+  padding: 12px;
+  border-radius: 8px;
+  min-width: 160px;
+  border: 1px solid rgba(255,255,255,0.04);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+}
+.drawdown-amount { color: #ff6b6b; font-weight: 900; font-size: 18px; }
+.drawdown-days { color: #ffd166; font-weight: 900; font-size: 18px; }
+
+/* ============================================================
+   FORM / ASSET LIST / TABLES
+   ============================================================ */
+
+/* Form layout helpers */
+.form-panel {
+  padding: 16px;
+  border-radius: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* grid helpers used by some forms */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+/* Form rows and labels */
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.label-muted {
+  font-size: 13px;
+  color: #cfcfcf;
+  margin-bottom: 4px;
+}
+
+/* Asset controls area */
+.asset-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+.asset-controls .left { flex: 1 1 auto; }
+.asset-controls .right { flex: 0 0 auto; }
+
+.small-note { font-size: 12px; color: #bfbfbf; }
+
+/* ============================================================
+   INPUTS & BUTTONS (higher contrast)
+   ============================================================ */
+
+/* Input base */
+.input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 38px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #0b0b0b;
+  border: 1px solid rgba(255,255,255,0.06);
+  color: #f6f6f6;
+  font-size: 14px;
+  outline: none;
+  transition: box-shadow .12s ease, border-color .12s ease;
+  font-family: inherit;
+}
+.input::placeholder { color: rgba(255,255,255,0.35); }
+.input:focus {
+  border-color: rgba(57,224,107,0.95); /* bright green focus */
+  box-shadow: 0 6px 20px rgba(57,224,107,0.06);
+}
+
+/* Buttons (base + variants) */
+.btn {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 800;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,0.2);
+  background: linear-gradient(180deg,#2b2b2b,#151515);
+  color: #f6f6f6;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.5);
+  transition: transform .06s ease, box-shadow .12s ease, opacity .12s ease;
+}
+.btn:active { transform: translateY(1px); }
+.btn[disabled], .btn[aria-disabled="true"] {
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Primary (blue) */
+.btn-primary {
+  background: linear-gradient(180deg,#1b78d6,#1360b3);
+  border: 1px solid rgba(0,0,0,0.22);
+  color: #fff;
+}
+.btn-primary:hover { filter: brightness(1.04); }
+
+/* Accent (green) */
+.btn-accent {
+  background: linear-gradient(180deg,#39e06b,#2db14a);
+  border: 1px solid rgba(0,0,0,0.14);
+  color: #04260b;
+}
+.btn-accent:hover { filter: brightness(1.03); }
+
+/* Danger (red small actions) */
+.btn-danger {
+  background: linear-gradient(180deg,#ff6b6b,#e53935);
+  color: #fff;
+  border: 1px solid rgba(0,0,0,0.18);
+}
+.btn-danger:hover { filter: brightness(1.05); }
+
+/* small variant for compact buttons */
+.btn.small, .btn-small, .btn[small] {
+  padding: 6px 8px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+
+/* ============================================================
+   WEIGHT BAR
+   ============================================================ */
+.weight-bar {
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.03);
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+.weight-bar .fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg,#39e06b,#2db14a);
+  width: 0%;
+  transition: width 260ms ease;
+  box-shadow: 0 8px 22px rgba(45,177,74,0.08);
+}
+.weight-bar.weight-bar-warning .fill {
+  background: linear-gradient(90deg,#ffb86b,#ff8a3c);
+}
+
+/* ============================================================
+   ASSET TABLE
+   ============================================================ */
+.asset-table, .asset-table table {
+  width: 100%;
+  border-collapse: collapse;
+  box-sizing: border-box;
+}
+.asset-table thead th, .asset-table table thead th {
+  text-align: left;
+  font-size: 13px;
+  color: #e6e6e6;
+  padding: 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+}
+.asset-table tbody td, .asset-table table tbody td {
+  padding: 12px;
+  font-size: 14px;
+  color: #f2f2f2;
+  border-bottom: 1px solid rgba(255,255,255,0.02);
+}
+
+/* Ensure inputs inside table cells are full width and compact */
+.asset-table td .input,
+.asset-table td input.input,
+.asset-table td select {
+  width: 100%;
+  height: 36px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+/* Table row hover */
+.asset-table tbody tr:hover {
+  background: rgba(255,255,255,0.02);
+}
+
+/* Asset actions cell alignment */
+.asset-actions { display: flex; gap: 8px; justify-content: flex-end; align-items: center; }
+
+/* ============================================================
+   METRICS (polish finale)
+   ============================================================ */
+
+/* Metric cards (polished for legacy parity) */
+.metrics-row {
+  display: flex;
+  gap: 14px;
+  margin-top: 16px;
+  align-items: stretch;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.metric-card {
+  background: linear-gradient(180deg,#0f1112,#0b0c0d);
+  padding: 14px;
+  border-radius: 10px;
+  border-left: 6px solid rgba(255,255,255,0.06);
+  min-width: 160px;
+  max-width: 22%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 14px 30px rgba(0,0,0,0.6);
+  box-sizing: border-box;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.metric-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.7);
+}
+
+.metric-label {
+  font-size: 12px;
+  color: #bfc7c4;
+  opacity: 0.95;
+  letter-spacing: 0.2px;
+}
+
+.metric-value {
+  font-size: 20px;
+  font-weight: 900;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.metric-unit {
+  font-size: 12px;
+  color: #9fb09b;
+  font-weight: 700;
+  display: inline-block;
+  margin-top: 4px;
+}
+
+/* small caption under the value (optional info) */
+.metric-caption {
+  font-size: 12px;
+  color: #9ea6a3;
+  opacity: 0.95;
+}
+
+/* ============================================================
+   UTILITIES: CENTERING & FULL-WIDTH HELPERS
+   ============================================================ */
+
+/* wrapper that forces the form/panel to be centered with a content max-width */
+.center-content {
+  max-width: 980px; /* allarga leggermente rispetto a prima per corrispondere legacy */
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+/* full-width form wrapper to align visually with charts/panels */
+.full-width-form {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 auto;
+  max-width: 100%;
+}
+
+/* force an element to span all columns in a CSS grid container */
+.full-span {
+  grid-column: 1 / -1;
+}
+
+/* ensure charts / cards expand to their containers */
+.chart-wrapper, .panel, .card { width: 100%; }
+
+/* small responsive tweaks */
+@media (max-width: 980px) {
+  .center-content { max-width: 100%; padding: 12px; }
+  .grid-2, .form-grid { grid-template-columns: 1fr; }
+  .asset-controls { flex-direction: column; align-items: stretch; gap: 8px; }
+  .metric-card { max-width: 100%; }
+}
+
+/* ============================================================
+   ANIMAZIONI UX
+   ============================================================ */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 2000px;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: 200px 0;
+  }
+}
+
+.loading-shimmer {
+  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Miglioramenti UX globali */
+.btn {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0px);
+  transition: transform 0.1s ease;
+}
+
+.panel {
+  transition: all 0.4s ease;
+}
+
+.panel:hover {
+  border-color: rgba(255,255,255,0.12);
+  box-shadow: 0 15px 40px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Focus states migliorati */
+.btn:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid #66bb6a;
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   HISTORICAL DATA SCROLLBAR CUSTOMIZATION
+   ============================================================ */
+
+/* Stile personalizzato per le scrollbar dei dati storici */
+.historical-data {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.1);
+}
+
+.historical-data::-webkit-scrollbar {
+  width: 8px;
+}
+
+.historical-data::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.historical-data::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.historical-data::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ============================================================
+   END FILE
+   ============================================================ */

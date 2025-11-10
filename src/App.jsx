@@ -9,7 +9,8 @@ import ErrorBoundary from './components/debug/ErrorBoundary.jsx';
 const HomePage = lazy(() => import('./pages/HomePage.jsx'));
 const BacktestPage = lazy(() => import('./pages/BacktestPage.jsx'));
 const PortfolioPage = lazy(() => import('./pages/PortfolioPage.jsx'));
-const AnalysisPage = lazy(() => import('./pages/AnalysisPage.jsx')); // With Calendar Feature
+const AnalysisPage = lazy(() => import('./pages/AnalysisPage.jsx'));
+const HeatmapPage = lazy(() => import('./pages/HeatmapPage.jsx'));
 const NewsPage = lazy(() => import('./pages/NewsPage.jsx'));
 const AboutPage = lazy(() => import('./pages/AboutPage.jsx'));
 const BackendTestPage = lazy(() => import('./pages/BackendTestPage.jsx')); // Backend Connection Test
@@ -53,6 +54,11 @@ export default function App() {
               <Route path="/analysis" element={
                 <ErrorBoundary>
                   <AnalysisPage />
+                </ErrorBoundary>
+              } />
+              <Route path="/heatmap" element={
+                <ErrorBoundary>
+                  <HeatmapPage />
                 </ErrorBoundary>
               } />
               <Route path="/news" element={<NewsPage />} />

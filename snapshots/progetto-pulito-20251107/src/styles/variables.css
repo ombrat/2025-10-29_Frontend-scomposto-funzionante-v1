@@ -1,0 +1,47 @@
+:root {
+  /* Backgrounds */
+  --bg: #0f0f0f;
+  --bg-secondary: #1a1a1a;
+  --panel: #151515;
+  --panel-hover: #1f1f1f;
+  --input-bg: #0b0b0b;
+  
+  /* Text colors */
+  --text-primary: #e6e6e6;
+  --text-secondary: #cfcfcf;
+  --text-muted: #999;
+  --text-light: #ccc;
+  
+  /* Accent colors */
+  --accent: #66bb6a;
+  --accent-secondary: #1e88e5;
+  --accent-warning: #ffb300;
+  --accent-danger: #ef5350;
+  
+  /* Chart colors */
+  --chart-primary: #66bb6a;
+  --chart-secondary: #1e88e5;
+  --chart-tertiary: #ffb300;
+  --chart-quaternary: #ef5350;
+  --chart-invested: #81c784;
+  
+  /* Borders and shadows */
+  --border-light: rgba(255,255,255,0.03);
+  --border-medium: rgba(255,255,255,0.06);
+  --border-heavy: rgba(255,255,255,0.12);
+  --shadow-light: 0 2px 8px rgba(0,0,0,0.3);
+  --shadow-medium: 0 4px 16px rgba(0,0,0,0.4);
+  --shadow-heavy: 0 8px 32px rgba(0,0,0,0.6);
+  
+  /* Spacing */
+  --gap-xs: 4px;
+  --gap-sm: 8px;
+  --gap-md: 12px;
+  --gap-lg: 18px;
+  --gap-xl: 24px;
+  
+  /* Border radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+}

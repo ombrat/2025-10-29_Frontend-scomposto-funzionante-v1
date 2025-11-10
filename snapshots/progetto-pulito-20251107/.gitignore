@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.env
+.vscode/
+.DS_Store
+npm-debug.log
+yarn-error.log
+.idea/
+coverage/
+venv/
+__pycache__/
+*.pyc
+*.pyo

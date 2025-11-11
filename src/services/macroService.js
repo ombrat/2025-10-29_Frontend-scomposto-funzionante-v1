@@ -20,103 +20,232 @@ class MacroService {
   }
 
   /**
-   * 📊 Lista ufficiale dei 32 indicatori FRED
-   * Organizzati in 10 categorie logiche
+   * 📊 Indicatori FRED ufficiali organizzati per categoria economica
+   * ORDINATI PER: Mondo del Lavoro, Crescita Economica, Solidità Economica
+   * ESCLUSI: Indicatori finanziari (mercati, tassi, bond)
    */
   getOfficialFredIndicators() {
     return {
-      // 1. GDP & GROWTH (4 indicatori)
-      'gdp_growth': [
-        { id: 'GDP', name: 'Prodotto Interno Lordo (PIL)', description: 'Valore totale di beni e servizi prodotti negli USA', units: 'Billions of Dollars' },
-        { id: 'GDPC1', name: 'PIL Reale', description: 'PIL aggiustato per inflazione', units: 'Billions of Chained 2017 Dollars' },
-        { id: 'GDPPOT', name: 'PIL Potenziale', description: 'Livello massimo sostenibile di produzione', units: 'Billions of Chained 2017 Dollars' },
-        { id: 'NYGDPMKTPCDWLD', name: 'PIL Pro Capite Mondiale', description: 'PIL per persona a livello mondiale', units: 'Dollars' }
-      ],
-
-      // 2. EMPLOYMENT & LABOR (4 indicatori)
+      // === CATEGORIA 1: MONDO DEL LAVORO ===
       'employment': [
-        { id: 'UNRATE', name: 'Tasso di Disoccupazione', description: 'Percentuale della forza lavoro disoccupata', units: 'Percent' },
-        { id: 'PAYEMS', name: 'Buste Paga Non Agricole', description: 'Numero di dipendenti nei settori non agricoli', units: 'Thousands of Persons' },
-        { id: 'CIVPART', name: 'Partecipazione Forza Lavoro', description: 'Percentuale di popolazione in età lavorativa attiva', units: 'Percent' },
-        { id: 'EMRATIO', name: 'Rapporto Occupazione-Popolazione', description: 'Percentuale di popolazione occupata', units: 'Percent' },
-        { id: 'ICSA', name: 'Richieste Disoccupazione Settimanali', description: 'Nuove richieste di sussidi di disoccupazione', units: 'Thousands' },
-        { id: 'JTSJOL', name: 'JOLTS - Aperture Lavoro', description: 'Numero di posizioni lavorative aperte', units: 'Thousands' },
-        { id: 'CES0500000003', name: 'Retribuzione Oraria Media', description: 'Paga oraria media settore privato', units: 'Dollars per Hour' }
+        { 
+          id: 'UNRATE', 
+          name: 'Tasso di Disoccupazione', 
+          description: 'Percentuale della forza lavoro che è attivamente alla ricerca di un impiego ma non riesce a trovarlo. Un tasso basso indica un mercato del lavoro sano con abbondanza di opportunità. Valori superiori al 5-6% possono segnalare difficoltà economiche significative.', 
+          units: 'Percent', 
+          categoryKey: 'Mondo del Lavoro' 
+        },
+        { 
+          id: 'PAYEMS', 
+          name: 'Buste Paga Non Agricole', 
+          description: 'Numero totale di dipendenti nei settori non agricoli dell\'economia americana, escludendo lavoratori agricoli, domestici e non profit. Questo indicatore è fondamentale per valutare la creazione di posti di lavoro mese dopo mese. Una crescita costante indica espansione economica robusta.', 
+          units: 'Thousands of Persons', 
+          categoryKey: 'Mondo del Lavoro' 
+        },
+        { 
+          id: 'CIVPART', 
+          name: 'Partecipazione Forza Lavoro', 
+          description: 'Percentuale della popolazione in età lavorativa (16+ anni) che è attivamente impiegata o alla ricerca di lavoro. Un tasso elevato indica un\'economia dinamica con opportunità diffuse. Cali prolungati possono segnalare scoraggiamento dei lavoratori o invecchiamento demografico.', 
+          units: 'Percent', 
+          categoryKey: 'Mondo del Lavoro' 
+        },
+        { 
+          id: 'EMRATIO', 
+          name: 'Rapporto Occupazione-Popolazione', 
+          description: 'Percentuale della popolazione civile totale che è attualmente occupata. A differenza del tasso di disoccupazione, questo indicatore include chi non cerca attivamente lavoro. Fornisce una visione più completa della salute del mercato del lavoro oltre le statistiche ufficiali.', 
+          units: 'Percent', 
+          categoryKey: 'Mondo del Lavoro' 
+        },
+        { 
+          id: 'ICSA', 
+          name: 'Richieste Disoccupazione', 
+          description: 'Numero di nuove richieste settimanali di sussidi di disoccupazione presentate dai lavoratori licenziati. È un indicatore anticipatore molto tempestivo delle condizioni del mercato del lavoro. Aumenti improvvisi possono segnalare un rallentamento economico imminente.', 
+          units: 'Thousands', 
+          categoryKey: 'Mondo del Lavoro' 
+        },
+        { 
+          id: 'JTSJOL', 
+          name: 'Aperture Lavoro', 
+          description: 'Numero totale di posizioni lavorative aperte e disponibili per cui le aziende stanno attivamente cercando candidati. Un alto numero di aperture indica forte domanda di lavoro e potenziale per crescita salariale. Quando supera il numero di disoccupati, segnala un mercato molto stretto.', 
+          units: 'Thousands', 
+          categoryKey: 'Mondo del Lavoro' 
+        },
+        { 
+          id: 'CES0500000003', 
+          name: 'Retribuzione Oraria Media', 
+          description: 'Paga media oraria per i lavoratori del settore privato non agricolo negli Stati Uniti. Crescite sostenute indicano pressioni inflazionistiche e potere d\'acquisto in aumento per i consumatori. Stagnazione salariale può segnalare debolezza del mercato del lavoro nonostante bassi tassi di disoccupazione.', 
+          units: 'Dollars per Hour', 
+          categoryKey: 'Mondo del Lavoro' 
+        },
+        { 
+          id: 'MANEMP', 
+          name: 'Occupazione Manifatturiero', 
+          description: 'Numero totale di lavoratori impiegati nel settore manifatturiero americano. Questo settore è considerato strategico per l\'economia e fortemente ciclico. Declini prolungati possono indicare deindustrializzazione o spostamenti produttivi verso l\'estero.', 
+          units: 'Thousands of Persons', 
+          categoryKey: 'Mondo del Lavoro' 
+        },
+        { 
+          id: 'USPRIV', 
+          name: 'Occupazione Settore Privato', 
+          description: 'Numero totale di dipendenti nel settore privato americano, escludendo lavoratori governativi. Rappresenta la capacità del settore privato di creare occupazione sostenibile. Una crescita robusta è segno di fiducia delle imprese e investimenti in capitale umano.', 
+          units: 'Thousands of Persons', 
+          categoryKey: 'Mondo del Lavoro' 
+        }
       ],
 
-      // 3. INFLATION & PRICES (4 indicatori)
-      'inflation': [
-        { id: 'CPIAUCSL', name: 'Inflazione (CPI)', description: 'Indice dei Prezzi al Consumo', units: 'Index 1982-1984=100' },
-        { id: 'CPILFESL', name: 'Inflazione Core', description: 'CPI escludendo alimentari ed energia', units: 'Index 1982-1984=100' },
-        { id: 'PPIACO', name: 'Indice Prezzi Produttori', description: 'Prezzi ricevuti dai produttori domestici', units: 'Index 1982=100' },
-        { id: 'DFEDTARU', name: 'Aspettative Inflazione 5-10 anni', description: 'Aspettative di inflazione a lungo termine', units: 'Percent' }
+      // === CATEGORIA 2: CRESCITA ECONOMICA ===
+      'growth': [
+        { 
+          id: 'GDP', 
+          name: 'Prodotto Interno Lordo', 
+          description: 'Valore monetario totale di tutti i beni e servizi finali prodotti all\'interno dei confini nazionali in un periodo specifico. È la misura più completa dell\'attività economica di un paese. Crescite del 2-3% annuo sono considerate sane per economie mature.', 
+          units: 'Billions of Dollars', 
+          categoryKey: 'Crescita Economica' 
+        },
+        { 
+          id: 'GDPC1', 
+          name: 'PIL Reale', 
+          description: 'Prodotto Interno Lordo aggiustato per gli effetti dell\'inflazione, permettendo confronti temporali significativi del potere d\'acquisto effettivo. Misura la crescita economica reale eliminando l\'illusione monetaria. Valori in calo per due trimestri consecutivi definiscono tecnicamente una recessione.', 
+          units: 'Billions of Chained 2017 Dollars', 
+          categoryKey: 'Crescita Economica' 
+        },
+        { 
+          id: 'GDPPOT', 
+          name: 'PIL Potenziale', 
+          description: 'Livello massimo di produzione che un\'economia può sostenere nel lungo periodo senza creare pressioni inflazionistiche eccessive. Quando il PIL reale supera significativamente il potenziale, indica surriscaldamento economico. Al contrario, ampi gap negativi segnalano capacità produttiva inutilizzata.', 
+          units: 'Billions of Chained 2017 Dollars', 
+          categoryKey: 'Crescita Economica' 
+        },
+        { 
+          id: 'INDPRO', 
+          name: 'Produzione Industriale', 
+          description: 'Indice che misura l\'output reale dei settori manifatturiero, minerario, elettrico e del gas. È un indicatore chiave della salute del settore produttivo e altamente ciclico. Cali anticipano spesso recessioni economiche più ampie.', 
+          units: 'Index 2017=100', 
+          categoryKey: 'Crescita Economica' 
+        },
+        { 
+          id: 'IPMAN', 
+          name: 'Produzione Manifatturiera', 
+          description: 'Indice specifico della produzione nel settore manifatturiero, core dell\'economia industriale. Include tutto dalla produzione di automobili all\'elettronica di consumo. È particolarmente sensibile ai cicli economici e alla domanda globale.', 
+          units: 'Index 2017=100', 
+          categoryKey: 'Crescita Economica' 
+        },
+        { 
+          id: 'SRVPRD', 
+          name: 'Produzione Servizi', 
+          description: 'Indice che traccia l\'attività nel settore dei servizi, che rappresenta circa l\'80% dell\'economia americana moderna. Include commercio, trasporti, finanza, sanità e servizi professionali. Meno volatile del manifatturiero ma ugualmente cruciale.', 
+          units: 'Index 2017=100', 
+          categoryKey: 'Crescita Economica' 
+        },
+        { 
+          id: 'RSAFS', 
+          name: 'Vendite al Dettaglio', 
+          description: 'Valore totale delle vendite nei negozi al dettaglio e online. Riflette direttamente la spesa dei consumatori, motore principale dell\'economia americana. Crescite sostenute indicano fiducia dei consumatori e salute economica generale. Molto sensibile al reddito disponibile.', 
+          units: 'Millions of Dollars', 
+          categoryKey: 'Crescita Economica' 
+        },
+        { 
+          id: 'PCE', 
+          name: 'Spese Consumatori', 
+          description: 'Misura totale della spesa personale per beni e servizi, rappresentando circa il 70% del PIL americano. Include acquisti di beni durevoli, non durevoli e servizi. La Federal Reserve monitora attentamente questo indicatore per valutare pressioni inflazionistiche.', 
+          units: 'Billions of Dollars', 
+          categoryKey: 'Crescita Economica' 
+        },
+        { 
+          id: 'NEWORDER', 
+          name: 'Nuovi Ordini', 
+          description: 'Valore dei nuovi ordini ricevuti dai produttori manifatturieri per beni durevoli e non durevoli. È un indicatore anticipatore della produzione futura e della fiducia delle imprese. Incrementi suggeriscono aspettative di crescita della domanda.', 
+          units: 'Millions of Dollars', 
+          categoryKey: 'Crescita Economica' 
+        },
+        { 
+          id: 'DGORDER', 
+          name: 'Ordini Beni Durevoli', 
+          description: 'Nuovi ordini per beni manifatturieri con vita utile superiore ai tre anni, come macchinari, computer, elettrodomestici e veicoli. È un indicatore volatile ma importante degli investimenti aziendali. Crescite robuste anticipano espansione della capacità produttiva.', 
+          units: 'Millions of Dollars', 
+          categoryKey: 'Crescita Economica' 
+        }
       ],
 
-      // 4. INTEREST RATES & MONETARY POLICY (4 indicatori)
-      'monetary_policy': [
-        { id: 'FEDFUNDS', name: 'Federal Funds Rate', description: 'Tasso di interesse obiettivo della Fed', units: 'Percent' },
-        { id: 'DGS10', name: 'Rendimento Titoli 10 anni', description: 'Rendimento dei Treasury a 10 anni', units: 'Percent' },
-        { id: 'DGS2', name: 'Rendimento Titoli 2 anni', description: 'Rendimento dei Treasury a 2 anni', units: 'Percent' },
-        { id: 'T10Y2Y', name: 'Spread 10Y-2Y', description: 'Differenza tra rendimenti 10 anni e 2 anni', units: 'Percent' }
-      ],
-
-      // 5. CONSUMER & RETAIL (3 indicatori)
-      'consumer': [
-        { id: 'RSAFS', name: 'Vendite al Dettaglio', description: 'Vendite totali del commercio al dettaglio', units: 'Millions of Dollars' },
-        { id: 'UMCSENT', name: 'Fiducia dei Consumatori', description: 'Indice di fiducia dei consumatori Michigan', units: 'Index 1966:Q1=100' },
-        { id: 'PCE', name: 'Spese Consumatori Personali', description: 'Spese totali dei consumatori', units: 'Billions of Dollars' },
-        { id: 'TOTALSL', name: 'Credito al Consumo', description: 'Credito totale al consumo in circolazione', units: 'Billions of Dollars' },
-        { id: 'DRCCLACBS', name: 'Insolvenza Carte di Credito', description: 'Tasso di insolvenza su prestiti carte credito', units: 'Percent' }
-      ],
-
-      // 6. HOUSING & REAL ESTATE (3 indicatori)
-      'housing': [
-        { id: 'HOUST', name: 'Nuove Costruzioni', description: 'Unità abitative iniziate mensilmente', units: 'Thousands of Units' },
-        { id: 'PERMIT', name: 'Permessi Edilizi', description: 'Permessi per nuove costruzioni residenziali', units: 'Thousands of Units' },
-        { id: 'HSN1F', name: 'Vendita Nuove Case', description: 'Vendite di case unifamiliari nuove', units: 'Thousands' },
-        { id: 'CSUSHPISA', name: 'Case-Shiller Index', description: 'Indice prezzi case negli USA', units: 'Index Jan 2000=100' },
-        { id: 'MORTGAGE30US', name: 'Tasso Mutui 30 anni', description: 'Tasso medio mutui ipotecari 30 anni', units: 'Percent' },
-        { id: 'DRSFRMACBS', name: 'Ritardi Mutui', description: 'Tasso di insolvenza sui mutui', units: 'Percent' }
-      ],
-
-      // 7. MANUFACTURING & INDUSTRY (3 indicatori)
-      'manufacturing': [
-        { id: 'INDPRO', name: 'Produzione Industriale', description: 'Output del settore manifatturiero, minerario e utilities', units: 'Index 2017=100' },
-        { id: 'CAPUTLG2211A2S', name: 'Utilizzo Capacità Produttiva', description: 'Percentuale capacità produttiva utilizzata', units: 'Percent' },
-        { id: 'NEWORDER', name: 'Nuovi Ordini Manifatturiero', description: 'Nuovi ordini nel settore manifatturiero', units: 'Millions of Dollars' },
-        { id: 'AMTMNO', name: 'Ordini di Fabbrica', description: 'Ordini totali dei produttori manifatturieri', units: 'Millions of Dollars' },
-        { id: 'MANEMP', name: 'Occupazione Manifatturiero', description: 'Numero di dipendenti nel settore manifatturiero', units: 'Thousands of Persons' },
-        { id: 'IPMAN', name: 'Produzione Manifatturiera (IP)', description: 'Indice produzione settore manifatturiero', units: 'Index 2017=100' },
-        { id: 'DGORDER', name: 'Ordini Beni Durevoli', description: 'Nuovi ordini per beni durevoli', units: 'Millions of Dollars' },
-        { id: 'CUMFNS', name: 'Utilizzo Capacità Manifatturiero', description: 'Capacità utilizzata nel manifatturiero', units: 'Percent' }
-      ],
-
-      // 8. SERVICES SECTOR (Proxy per PMI Servizi)
-      'services': [
-        { id: 'SRVPRD', name: 'Produzione Settore Servizi', description: 'Indice produzione settore servizi', units: 'Index 2017=100' },
-        { id: 'USTPU', name: 'Occupazione Trasporti e Utilities', description: 'Impiegati in trasporti e utilities', units: 'Thousands of Persons' },
-        { id: 'USWTRADE', name: 'Occupazione Commercio All\'Ingrosso', description: 'Impiegati nel commercio all\'ingrosso', units: 'Thousands of Persons' },
-        { id: 'USFIRE', name: 'Occupazione Settore Finanziario', description: 'Impiegati in finanza, assicurazioni e immobiliare', units: 'Thousands of Persons' },
-        { id: 'USPRIV', name: 'Occupazione Settore Privato', description: 'Totale impiegati settore privato', units: 'Thousands of Persons' }
-      ],
-
-      // 9. TRADE & INTERNATIONAL (3 indicatori)
-      'trade': [
-        { id: 'BOPGSTB', name: 'Bilancia Commerciale', description: 'Differenza tra esportazioni e importazioni', units: 'Millions of Dollars' },
-        { id: 'DEXUSEU', name: 'Tasso di Cambio USD/EUR', description: 'Dollari USA per Euro', units: 'U.S. Dollars to One Euro' },
-        { id: 'DTWEXBGS', name: 'Indice Dollaro USA', description: 'Valore del dollaro rispetto a un paniere di valute', units: 'Index Jan 2006=100' }
-      ],
-
-      // 10. FINANCIAL MARKETS (2 indicatori)
-      'financial': [
-        { id: 'SP500', name: 'S&P 500', description: 'Indice azionario delle 500 maggiori aziende USA', units: 'Index' },
-        { id: 'VIXCLS', name: 'VIX Volatility Index', description: 'Indice di volatilità del mercato azionario', units: 'Index' }
-      ],
-
-      // 11. GOVERNMENT & FISCAL (2 indicatori)
-      'fiscal': [
-        { id: 'GFDEBTN', name: 'Debito Federale USA', description: 'Debito totale del governo federale USA', units: 'Millions of Dollars' },
-        { id: 'FYONGDA188S', name: 'Deficit/Surplus Federale', description: 'Bilancio annuale del governo federale', units: 'Millions of Dollars' }
+      // === CATEGORIA 3: SOLIDITÀ ECONOMICA ===
+      'stability': [
+        { 
+          id: 'CPIAUCSL', 
+          name: 'Inflazione (CPI)', 
+          description: 'Indice dei Prezzi al Consumo che misura la variazione media dei prezzi pagati dai consumatori urbani per un paniere fisso di beni e servizi. La Federal Reserve punta a un\'inflazione del 2% come ottimale. Tassi superiori al 3-4% erodono potere d\'acquisto e possono richiedere interventi restrittivi.', 
+          units: 'Index 1982-1984=100', 
+          categoryKey: 'Solidità Economica' 
+        },
+        { 
+          id: 'CPILFESL', 
+          name: 'Inflazione Core', 
+          description: 'Indice dei prezzi al consumo che esclude le componenti volatili di alimentari ed energia, fornendo una misura più stabile delle tendenze inflazionistiche di fondo. È preferito dai policy maker per valutare pressioni inflazionistiche persistenti e guidare decisioni sui tassi di interesse.', 
+          units: 'Index 1982-1984=100', 
+          categoryKey: 'Solidità Economica' 
+        },
+        { 
+          id: 'PPIACO', 
+          name: 'Prezzi Produttori', 
+          description: 'Indice che misura la variazione media dei prezzi di vendita ricevuti dai produttori domestici per il loro output. Anticipa spesso l\'inflazione al consumo poiché gli aumenti dei costi di produzione vengono trasferiti ai consumatori. Utile per prevedere pressioni sui margini aziendali.', 
+          units: 'Index 1982=100', 
+          categoryKey: 'Solidità Economica' 
+        },
+        { 
+          id: 'UMCSENT', 
+          name: 'Fiducia Consumatori', 
+          description: 'Indice di fiducia dei consumatori dell\'Università del Michigan che misura l\'ottimismo dei consumatori riguardo le condizioni economiche attuali e future. Valori elevati precedono spesso aumenti della spesa personale. Cali bruschi possono segnalare recessioni imminenti.', 
+          units: 'Index 1966:Q1=100', 
+          categoryKey: 'Solidità Economica' 
+        },
+        { 
+          id: 'CAPUTLG2211A2S', 
+          name: 'Utilizzo Capacità', 
+          description: 'Percentuale della capacità produttiva totale che è effettivamente utilizzata nell\'economia. Valori superiori all\'82-85% suggeriscono potenziali strozzature produttive e pressioni inflazionistiche. Tassi bassi indicano capacità inutilizzata e debolezza della domanda aggregata.', 
+          units: 'Percent', 
+          categoryKey: 'Solidità Economica' 
+        },
+        { 
+          id: 'HOUST', 
+          name: 'Nuove Costruzioni', 
+          description: 'Numero di nuove unità abitative per cui è iniziata la costruzione ogni mese. Il settore immobiliare è un motore importante dell\'economia con forti effetti moltiplicatori su occupazione e consumi. Cali significativi hanno spesso preceduto recessioni economiche.', 
+          units: 'Thousands of Units', 
+          categoryKey: 'Solidità Economica' 
+        },
+        { 
+          id: 'PERMIT', 
+          name: 'Permessi Edilizi', 
+          description: 'Numero di permessi autorizzati per la costruzione di nuove abitazioni private. Anticipa la costruzione effettiva di 1-2 mesi ed è quindi un indicatore anticipatore dell\'attività immobiliare. Riflette le aspettative dei costruttori sulla domanda futura di abitazioni.', 
+          units: 'Thousands of Units', 
+          categoryKey: 'Solidità Economica' 
+        },
+        { 
+          id: 'CSUSHPISA', 
+          name: 'Prezzi Case', 
+          description: 'Indice Case-Shiller che traccia i prezzi delle abitazioni unifamiliari in 20 principali aree metropolitane americane. La ricchezza immobiliare influenza fortemente la spesa dei consumatori. Bolle immobiliari possono creare instabilità finanziaria sistemica come visto nel 2008.', 
+          units: 'Index Jan 2000=100', 
+          categoryKey: 'Solidità Economica' 
+        },
+        { 
+          id: 'BOPGSTB', 
+          name: 'Bilancia Commerciale', 
+          description: 'Differenza tra il valore delle esportazioni e delle importazioni di beni e servizi. Un deficit persistente indica che il paese consuma più di quanto produce. Cambiamenti significativi possono impattare i tassi di cambio e riflettere la competitività internazionale.', 
+          units: 'Millions of Dollars', 
+          categoryKey: 'Solidità Economica' 
+        },
+        { 
+          id: 'TOTALSL', 
+          name: 'Credito Consumatori', 
+          description: 'Ammontare totale del credito al consumo in essere, includendo prestiti auto, carte di credito e prestiti studenteschi. Una crescita rapida può indicare fiducia economica ma anche accumulo di debito insostenibile. Contrazioni brusche possono segnalare stress finanziario delle famiglie.', 
+          units: 'Billions of Dollars', 
+          categoryKey: 'Solidità Economica' 
+        },
+        { 
+          id: 'DRCCLACBS', 
+          name: 'Insolvenza Carte Credito', 
+          description: 'Tasso di insolvenza sui prestiti via carte di credito presso banche commerciali americane. Aumenti significativi segnalano stress finanziario delle famiglie e possono precedere rallentamenti nei consumi. Valori superiori al 3-4% sono considerati preoccupanti per la stabilità del sistema bancario.', 
+          units: 'Percent', 
+          categoryKey: 'Solidità Economica' 
+        }
       ]
     };
   }
@@ -179,6 +308,11 @@ class MacroService {
               limit: years * 12, // Circa 70 anni di dati mensili
               sort_order: 'desc'
             });
+            
+            // WORKAROUND: Il backend ignora sort_order, forza inversione
+            if (data.observations && Array.isArray(data.observations)) {
+              data.observations.reverse();
+            }
             
             return { seriesId, data, success: true };
           } catch (error) {

@@ -1,10 +1,10 @@
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import macroService from '../services/macroService';
-import '../styles/HeatmapPage.css';
+import '../styles/HeatmapPage-modern.css';
 
 /**
  * HeatmapPage - Visualizzazione heatmap degli indicatori economici
- * Simile a Bloomberg/Reuters con colori che indicano performance
+ * Design moderno ed elegante
  */
 const HeatmapPage = () => {
   const [data, setData] = useState(null);
@@ -12,6 +12,7 @@ const HeatmapPage = () => {
   const [error, setError] = useState(null);
   const [viewMode, setViewMode] = useState('monthly'); // 'monthly' o 'quarterly'
   const [yearsToShow, setYearsToShow] = useState(2); // Ultimi 2 anni
+  const [expandedRows, setExpandedRows] = useState(new Set()); // Righe espanse
 
   useEffect(() => {
     loadData();
@@ -73,112 +74,62 @@ const HeatmapPage = () => {
   };
 
   /**
-   * Calcola valore/variazione per un periodo specifico
+   * Trova il valore esatto per un periodo specifico
+   * SEMPLICE: cerca solo la data esatta, niente calcoli complicati
    */
   const calculateValueForPeriod = (indicator, period) => {
     const observations = indicator.observations;
     if (!observations || observations.length === 0) return null;
 
-    // FORZA ordinamento decrescente (più recenti prima)
-    // Il backend potrebbe non rispettare sort_order=desc
-    const sortedObs = [...observations].sort((a, b) => {
-      const dateA = new Date(a.date);
-      const dateB = new Date(b.date);
-      return dateB - dateA; // Decrescente
-    });
-
-    // DEBUG: Verifica primi 3 elementi ordinati
-    if ((indicator.id === 'UNRATE' || indicator.id === 'PAYEMS') && period.label === 'nov 24') {
-      console.log(`🔍 ${indicator.id} after sort:`, {
-        first3: sortedObs.slice(0, 3).map(o => o.date),
-        total: sortedObs.length
-      });
+    // Costruisci la data target esatta
+    let targetYear = period.year;
+    let targetMonth;
+    
+    if (period.month !== undefined) {
+      // Modalità mensile: usa il mese esatto
+      targetMonth = period.month;
+    } else {
+      // Modalità trimestrale: primo mese del trimestre
+      targetMonth = (period.quarter - 1) * 3;
     }
 
-    // Trova osservazione più vicina al periodo target (con tolleranza di 3 mesi)
-    let currentObs = null;
-    let previousObs = null;
-    let bestMatch = null;
-    let minDistance = Infinity;
+    // Cerca l'osservazione con data esatta (formato YYYY-MM-DD)
+    const targetDateStr = `${targetYear}-${String(targetMonth + 1).padStart(2, '0')}-01`;
+    
+    const matchingObs = observations.find(obs => obs.date === targetDateStr);
 
-    const targetDate = new Date(period.year, period.month || (period.quarter - 1) * 3, 15);
-
-    // DEBUG: Target date
-    if ((indicator.id === 'UNRATE' || indicator.id === 'PAYEMS') && period.label === 'nov 24') {
-      console.log(`🎯 ${indicator.id} target:`, {
-        label: period.label,
-        targetDate: targetDate.toISOString(),
-        year: period.year,
-        month: period.month
-      });
+    if (!matchingObs || matchingObs.value === '.' || matchingObs.value === null) {
+      return null;
     }
 
-    for (let i = 0; i < sortedObs.length; i++) {
-      const obsDate = new Date(sortedObs[i].date);
-      const distance = Math.abs(obsDate - targetDate);
-      
-      // Cerca match entro 90 giorni (3 mesi)
-      if (distance < minDistance && distance < 90 * 24 * 60 * 60 * 1000) {
-        minDistance = distance;
-        bestMatch = i;
-      }
-    }
+    const value = parseFloat(matchingObs.value);
+    if (isNaN(value)) return null;
 
-    // DEBUG: Risultato matching
-    if ((indicator.id === 'UNRATE' || indicator.id === 'PAYEMS') && period.label === 'nov 24') {
-      console.log(`✅ ${indicator.id} match:`, {
-        bestMatch,
-        minDistance: minDistance / (24 * 60 * 60 * 1000), // giorni
-        matchedDate: sortedObs[bestMatch]?.date,
-        value: sortedObs[bestMatch]?.value
-      });
-    }
-
-    if (bestMatch !== null) {
-      currentObs = sortedObs[bestMatch];
-      
-      // Trova osservazione precedente (cerca l'osservazione più vecchia disponibile)
-      if (period.month !== undefined) {
-        // Modalità mensile: cerca 1 mese prima
-        previousObs = sortedObs[bestMatch + 1] || null;
-      } else {
-        // Modalità trimestrale: cerca 3 mesi prima
-        for (let i = bestMatch + 1; i < sortedObs.length; i++) {
-          const prevDate = new Date(sortedObs[i].date);
-          const currDate = new Date(currentObs.date);
-          const monthsDiff = (currDate.getFullYear() - prevDate.getFullYear()) * 12 + 
-                            (currDate.getMonth() - prevDate.getMonth());
-          
-          if (monthsDiff >= 2 && monthsDiff <= 4) {
-            previousObs = sortedObs[i];
+    // Trova osservazione precedente per calcolare variazione
+    const currentIndex = observations.findIndex(obs => obs.date === targetDateStr);
+    let previousValue = null;
+    let changePercent = null;
+    
+    if (currentIndex > 0) {
+      // Cerca il valore precedente valido
+      for (let i = currentIndex - 1; i >= 0; i--) {
+        const prevObs = observations[i];
+        if (prevObs.value && prevObs.value !== '.') {
+          previousValue = parseFloat(prevObs.value);
+          if (!isNaN(previousValue) && previousValue !== 0) {
+            const change = value - previousValue;
+            changePercent = (change / previousValue) * 100;
             break;
           }
         }
       }
     }
 
-    if (!currentObs || currentObs.value === '.') return null;
-
-    const currentValue = parseFloat(currentObs.value);
-    if (isNaN(currentValue)) return null;
-
-    // Calcola variazione percentuale se abbiamo valore precedente
-    let change = null;
-    let changePercent = null;
-
-    if (previousObs && previousObs.value !== '.') {
-      const previousValue = parseFloat(previousObs.value);
-      if (!isNaN(previousValue) && previousValue !== 0) {
-        change = currentValue - previousValue;
-        changePercent = (change / previousValue) * 100;
-      }
-    }
-
     return {
-      value: currentValue,
-      change,
+      value,
+      previousValue,
       changePercent,
-      date: currentObs.date
+      date: matchingObs.date
     };
   };
 
@@ -221,10 +172,22 @@ const HeatmapPage = () => {
       return {
         id: indicator.id,
         name: indicator.name,
+        description: indicator.description,
         category: indicator.categoryKey,
+        categoryLabel: indicator.categoryKey === 'employment' ? 'Mondo del Lavoro' :
+                       indicator.categoryKey === 'growth' ? 'Crescita Economica' :
+                       indicator.categoryKey === 'stability' ? 'Solidità Economica' : indicator.categoryKey,
         values,
         units: indicator.units
       };
+    });
+
+    // Ordina per categoria
+    const categoryOrder = ['employment', 'growth', 'stability'];
+    rows.sort((a, b) => {
+      const orderA = categoryOrder.indexOf(a.category);
+      const orderB = categoryOrder.indexOf(b.category);
+      return orderA - orderB;
     });
 
     return {
@@ -234,32 +197,55 @@ const HeatmapPage = () => {
   }, [data, viewMode, yearsToShow]);
 
   /**
-   * Determina il colore della cella in base al valore
+   * Determina il colore della cella in base al miglioramento/peggioramento
+   * Verde = miglioramento economico
+   * Rosso = peggioramento economico
+   * Intensità proporzionale al cambiamento
    */
   const getCellColor = (cellData, indicator) => {
-    if (!cellData || cellData.changePercent === null) return 'transparent';
+    if (!cellData || cellData.changePercent === null || cellData.changePercent === undefined) {
+      return 'rgba(100, 116, 139, 0.1)'; // Grigio neutro se nessun cambio
+    }
 
     const change = cellData.changePercent;
     
-    // Per alcuni indicatori, valori alti sono negativi (es. disoccupazione)
-    const isInverse = ['UNRATE', 'VIXCLS', 'MORTGAGE30US', 'FEDFUNDS'].includes(indicator.id);
-    const effectiveChange = isInverse ? -change : change;
-
-    // Scala di colore basata su magnitude
-    const absChange = Math.abs(effectiveChange);
+    // Indicatori INVERSI: aumento = negativo (rosso), diminuzione = positivo (verde)
+    const inverseIndicators = [
+      'UNRATE',        // Disoccupazione
+      'ICSA',          // Richieste sussidi disoccupazione
+      'CPIAUCSL',      // Inflazione CPI
+      'CPILFESL',      // Inflazione core
+      'PPIACO',        // Inflazione produttori
+      'DRCCLACBS',     // Insolvenza carte credito
+    ];
+    
+    const isInverse = inverseIndicators.includes(indicator.id);
+    
+    // Determina se il cambiamento è positivo o negativo per l'economia
+    const isGoodChange = isInverse ? change < 0 : change > 0;
+    
+    // Calcola intensità in base alla magnitudine del cambiamento
+    const absChange = Math.abs(change);
     let intensity;
-
-    if (absChange < 0.5) intensity = 0.2;
-    else if (absChange < 1) intensity = 0.4;
-    else if (absChange < 2) intensity = 0.6;
-    else if (absChange < 5) intensity = 0.8;
-    else intensity = 1.0;
-
-    if (effectiveChange > 0) {
-      // Verde per positivo
+    
+    if (absChange < 0.5) {
+      intensity = 0.2;
+    } else if (absChange < 1) {
+      intensity = 0.35;
+    } else if (absChange < 2) {
+      intensity = 0.5;
+    } else if (absChange < 5) {
+      intensity = 0.7;
+    } else {
+      intensity = 0.9;
+    }
+    
+    // Applica colore
+    if (isGoodChange) {
+      // Verde per miglioramento
       return `rgba(34, 197, 94, ${intensity})`;
     } else {
-      // Rosso per negativo
+      // Rosso per peggioramento
       return `rgba(239, 68, 68, ${intensity})`;
     }
   };
@@ -270,14 +256,37 @@ const HeatmapPage = () => {
   const formatCellValue = (cellData, indicator) => {
     if (!cellData) return '—';
     
-    const { changePercent } = cellData;
+    const { value, changePercent } = cellData;
     
-    if (changePercent === null || changePercent === undefined) {
+    if (value === null || value === undefined) {
       return '—';
     }
 
-    const sign = changePercent >= 0 ? '+' : '';
-    return `${sign}${changePercent.toFixed(2)}%`;
+    // Mostra valore con variazione percentuale se disponibile
+    const formattedValue = value.toFixed(2);
+    
+    if (changePercent !== null && changePercent !== undefined) {
+      const sign = changePercent >= 0 ? '+' : '';
+      const arrow = changePercent > 0 ? '↑' : changePercent < 0 ? '↓' : '';
+      return `${formattedValue} ${arrow}${sign}${changePercent.toFixed(1)}%`;
+    }
+    
+    return formattedValue;
+  };
+
+  /**
+   * Toggle espansione riga per mostrare variazioni percentuali
+   */
+  const toggleRowExpansion = (indicatorId) => {
+    setExpandedRows(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(indicatorId)) {
+        newSet.delete(indicatorId);
+      } else {
+        newSet.add(indicatorId);
+      }
+      return newSet;
+    });
   };
 
   if (loading) {
@@ -358,24 +367,24 @@ const HeatmapPage = () => {
 
       <div className="heatmap-legend">
         <div className="legend-item">
-          <div className="legend-color" style={{ background: 'rgba(239, 68, 68, 0.8)' }}></div>
-          <span>Forte negativo</span>
+          <div className="legend-color" style={{ background: 'rgba(239, 68, 68, 0.9)' }}></div>
+          <span>Forte peggioramento</span>
         </div>
         <div className="legend-item">
-          <div className="legend-color" style={{ background: 'rgba(239, 68, 68, 0.3)' }}></div>
-          <span>Lieve negativo</span>
+          <div className="legend-color" style={{ background: 'rgba(239, 68, 68, 0.35)' }}></div>
+          <span>Lieve peggioramento</span>
         </div>
         <div className="legend-item">
-          <div className="legend-color" style={{ background: 'transparent', border: '1px solid #ccc' }}></div>
-          <span>Neutro</span>
+          <div className="legend-color" style={{ background: 'rgba(100, 116, 139, 0.1)', border: '1px solid #ccc' }}></div>
+          <span>Stabile / Primo valore</span>
         </div>
         <div className="legend-item">
-          <div className="legend-color" style={{ background: 'rgba(34, 197, 94, 0.3)' }}></div>
-          <span>Lieve positivo</span>
+          <div className="legend-color" style={{ background: 'rgba(34, 197, 94, 0.35)' }}></div>
+          <span>Lieve miglioramento</span>
         </div>
         <div className="legend-item">
-          <div className="legend-color" style={{ background: 'rgba(34, 197, 94, 0.8)' }}></div>
-          <span>Forte positivo</span>
+          <div className="legend-color" style={{ background: 'rgba(34, 197, 94, 0.9)' }}></div>
+          <span>Forte miglioramento</span>
         </div>
       </div>
 
@@ -393,29 +402,103 @@ const HeatmapPage = () => {
               </tr>
             </thead>
             <tbody>
-              {rows.map((row, rowIdx) => (
-                <tr key={rowIdx}>
-                  <td className="indicator-column sticky-col" title={row.name}>
-                    <div className="indicator-cell">
-                      <span className="indicator-id">{row.id}</span>
-                      <span className="indicator-name">{row.name}</span>
-                    </div>
-                  </td>
-                  {row.values.map((cellData, colIdx) => (
-                    <td
-                      key={colIdx}
-                      className="value-cell"
-                      style={{ 
-                        backgroundColor: getCellColor(cellData, row),
-                        color: cellData && cellData.changePercent !== null ? '#000' : '#999'
-                      }}
-                      title={cellData ? `${row.name}: ${formatCellValue(cellData, row)} (${cellData.date})` : 'N/A'}
+              {rows.map((row, rowIdx) => {
+                // Controlla se è la prima riga di una nuova categoria
+                const isFirstInCategory = rowIdx === 0 || rows[rowIdx - 1].category !== row.category;
+                
+                return (
+                  <React.Fragment key={row.id}>
+                    {/* Header categoria */}
+                    {isFirstInCategory && (
+                      <tr className="category-header-row">
+                        <td colSpan={periods.length + 1} className="category-header">
+                          <span className="category-icon">
+                            {row.category === 'employment' ? '👥' : 
+                             row.category === 'growth' ? '📈' : 
+                             row.category === 'stability' ? '🛡️' : '📊'}
+                          </span>
+                          {row.categoryLabel}
+                        </td>
+                      </tr>
+                    )}
+                    
+                    {/* Riga principale */}
+                    <tr 
+                      className={expandedRows.has(row.id) ? 'expanded-row' : ''}
+                      onClick={() => toggleRowExpansion(row.id)}
+                      style={{ cursor: 'pointer' }}
                     >
-                      {formatCellValue(cellData, row)}
-                    </td>
-                  ))}
-                </tr>
-              ))}
+                      <td className="indicator-column sticky-col" title={row.name}>
+                        <div className="indicator-cell">
+                          <span className="expand-icon">
+                            {expandedRows.has(row.id) ? '▼' : '▶'}
+                          </span>
+                          <a
+                            href={`https://fred.stlouisfed.org/series/${row.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="indicator-name-link"
+                            title={`Apri ${row.id} su FRED`}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {row.name}
+                          </a>
+                          {row.units && <span className="indicator-units">{row.units}</span>}
+                          {/* Info tooltip */}
+                          <div className="info-tooltip-wrapper" onClick={(e) => e.stopPropagation()}>
+                            <span className="info-icon">i</span>
+                            <div className="info-tooltip">
+                              <strong>{row.name}</strong>
+                              <p>{row.description || 'Nessuna descrizione disponibile'}</p>
+                              <small>Serie FRED: {row.id}</small>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      {row.values.map((cellData, colIdx) => (
+                        <td
+                          key={colIdx}
+                          className="value-cell"
+                          style={{ 
+                            backgroundColor: getCellColor(cellData, row),
+                            color: cellData && cellData.changePercent !== null ? '#000' : '#999'
+                          }}
+                          title={cellData ? `${row.name}: ${cellData.value?.toFixed(2)} (${cellData.date})` : 'N/A'}
+                        >
+                          {cellData ? cellData.value?.toFixed(2) : '—'}
+                        </td>
+                      ))}
+                    </tr>
+                    
+                    {/* Riga secondaria con variazioni percentuali */}
+                    {expandedRows.has(row.id) && (
+                      <tr className="detail-row">
+                        <td className="indicator-column sticky-col detail-label">
+                          <span className="variation-label">Δ% vs precedente</span>
+                        </td>
+                        {row.values.map((cellData, colIdx) => (
+                          <td
+                            key={colIdx}
+                            className="value-cell detail-cell"
+                            style={{ 
+                              backgroundColor: getCellColor(cellData, row),
+                              color: cellData && cellData.changePercent !== null ? '#000' : '#999'
+                            }}
+                          >
+                            {cellData && cellData.changePercent !== null ? (
+                              <>
+                                {cellData.changePercent > 0 ? '↑' : cellData.changePercent < 0 ? '↓' : '→'}
+                                {cellData.changePercent >= 0 ? '+' : ''}
+                                {cellData.changePercent.toFixed(2)}%
+                              </>
+                            ) : '—'}
+                          </td>
+                        ))}
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })}
             </tbody>
           </table>
         </div>

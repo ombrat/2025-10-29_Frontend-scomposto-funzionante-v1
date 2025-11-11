@@ -1,0 +1,564 @@
+/* === HEATMAP PAGE - MODERN & ELEGANT DESIGN === */
+
+.heatmap-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 1.5rem;
+}
+
+/* === HEADER === */
+.heatmap-header {
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 1.5rem 2rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.header-content h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 0.3rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.subtitle {
+  color: #6b7280;
+  font-size: 0.85rem;
+  margin: 0;
+  font-weight: 400;
+}
+
+.controls {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.control-group label {
+  font-size: 0.8rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.control-group select {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  background: white;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.control-group select:hover {
+  border-color: #667eea;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+}
+
+.control-group select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.refresh-btn {
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: auto;
+}
+
+.refresh-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+}
+
+.refresh-btn:active {
+  transform: translateY(0);
+}
+
+/* === LEGEND === */
+.heatmap-legend {
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.legend-item span {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.legend-color {
+  width: 32px;
+  height: 16px;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* === TABLE CONTAINER === */
+.heatmap-container {
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.heatmap-scroll {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 70vh;
+}
+
+.heatmap-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.heatmap-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.heatmap-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 10px;
+}
+
+.heatmap-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #5568d3 0%, #653a8e 100%);
+}
+
+/* === TABLE === */
+.heatmap-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.85rem;
+  table-layout: fixed; /* Larghezza colonne uniforme */
+}
+
+.heatmap-table th {
+  padding: 0.75rem 0.5rem;
+  text-align: center;
+  font-weight: 600;
+  color: #374151;
+  background: #f9fafb;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  width: 90px; /* Larghezza fissa per tutte le colonne */
+}
+
+.heatmap-table th.indicator-column {
+  text-align: left;
+  min-width: 220px;
+  max-width: 220px;
+  width: 220px;
+  padding-left: 1.5rem;
+}
+
+.heatmap-table td {
+  padding: 0.6rem 0.5rem;
+  text-align: center;
+  border-bottom: 1px solid #f3f4f6;
+  transition: all 0.15s;
+  font-weight: 500;
+  width: 90px; /* Larghezza fissa per tutte le colonne */
+  height: 60px; /* Altezza fissa per tutte le righe */
+  vertical-align: middle;
+}
+
+.heatmap-table tbody tr {
+  transition: all 0.2s;
+  height: 60px; /* Altezza fissa per le righe */
+}
+
+.heatmap-table tbody tr:hover {
+  background-color: rgba(102, 126, 234, 0.03);
+}
+
+.heatmap-table td.value-cell {
+  min-width: 90px;
+  max-width: 90px;
+  font-family: 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: default;
+  border-radius: 6px;
+}
+
+.heatmap-table td.indicator-column {
+  min-width: 220px;
+  max-width: 220px;
+  width: 220px;
+  height: 60px;
+  overflow: visible; /* Permette al tooltip di uscire */
+}
+
+.sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  background: white;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.03);
+  overflow: visible; /* Permette al tooltip di uscire */
+}
+
+/* === INDICATOR CELL === */
+.indicator-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  align-items: flex-start;
+  position: relative;
+  padding-left: 1.2rem;
+  height: 100%;
+  justify-content: center;
+  overflow: visible; /* Permette al tooltip di uscire */
+}
+
+.expand-icon {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.65rem;
+  color: #9ca3af;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.expanded-row .expand-icon {
+  color: #667eea;
+}
+
+.expanded-row {
+  background-color: rgba(102, 126, 234, 0.02);
+}
+
+.indicator-name-link {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 0.82rem;
+  text-decoration: none;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  line-height: 1.2;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap; /* Nome su una riga */
+}
+
+.indicator-name-link:hover {
+  color: #667eea;
+}
+
+.indicator-units {
+  font-size: 0.68rem;
+  color: #9ca3af;
+  font-weight: 400;
+  display: block;
+  line-height: 1.1;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap; /* Unità su una riga */
+}
+
+/* === INFO TOOLTIP === */
+.info-tooltip-wrapper {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 1000; /* Molto alto per essere sopra tutto */
+}
+
+.info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(156, 163, 175, 0.3);
+  color: #9ca3af;
+  font-size: 0.6rem;
+  font-weight: 600;
+  font-style: italic;
+  cursor: help;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(156, 163, 175, 0.2);
+}
+
+.info-icon:hover {
+  background: rgba(102, 126, 234, 0.2);
+  color: #667eea;
+  border-color: rgba(102, 126, 234, 0.3);
+  transform: scale(1.1);
+}
+
+.info-tooltip {
+  position: absolute;
+  bottom: 100%; /* Appare sopra invece che sotto */
+  left: 0; /* Allineato a sinistra dell'icona, quindi appare a destra */
+  margin-bottom: 8px; /* Spazio dall'icona */
+  width: 300px;
+  background: white;
+  border: 2px solid #667eea;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px); /* Animazione verso l'alto */
+  transition: all 0.3s ease;
+  z-index: 10000; /* Massima priorità */
+  pointer-events: none;
+  text-align: left;
+}
+
+.info-tooltip-wrapper:hover .info-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.info-tooltip strong {
+  display: block;
+  color: #1f2937;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.info-tooltip p {
+  color: #4b5563;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  margin: 0 0 0.5rem 0;
+  text-align: left;
+}
+
+.info-tooltip small {
+  display: block;
+  color: #9ca3af;
+  font-size: 0.7rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+/* === CATEGORY HEADERS === */
+.category-header-row {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
+  border-top: 2px solid rgba(102, 126, 234, 0.4);
+  border-bottom: 2px solid rgba(102, 126, 234, 0.4);
+  height: 50px;
+}
+
+.category-header {
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #4c1d95;
+  padding: 1rem 1.5rem !important;
+  text-align: left; /* Allineamento a sinistra */
+  background: linear-gradient(to right, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.4));
+  backdrop-filter: blur(5px);
+}
+
+.category-icon {
+  font-size: 1.2rem;
+  margin-right: 0.75rem;
+  display: inline-block;
+}
+
+.category-header-row:hover {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.25), rgba(118, 75, 162, 0.25));
+}
+
+/* === DETAIL ROW === */
+.detail-row {
+  background: linear-gradient(to right, rgba(243, 244, 246, 0.5), rgba(243, 244, 246, 0.3));
+  font-size: 0.8rem;
+  height: 45px; /* Altezza fissa più piccola per dettagli */
+}
+
+.detail-row td {
+  padding: 0.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  height: 45px;
+  vertical-align: middle;
+}
+
+.detail-label {
+  font-style: italic;
+  color: #6b7280;
+  font-size: 0.7rem;
+  padding-left: 2.2rem !important;
+  font-weight: 500;
+}
+
+.variation-label {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-cell {
+  font-family: 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+/* === FOOTER === */
+.heatmap-footer {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 1.25rem 1.75rem;
+  margin-top: 1.5rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.heatmap-footer p {
+  margin: 0.4rem 0;
+  font-size: 0.75rem;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.heatmap-footer strong {
+  color: #374151;
+  font-weight: 600;
+}
+
+/* === LOADING & ERROR === */
+.loading-container,
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  color: white;
+}
+
+.loading-container h2,
+.error-container h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.loading-container p,
+.error-container p {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-bottom: 1.5rem;
+}
+
+.error-container button {
+  padding: 0.75rem 1.5rem;
+  background: white;
+  color: #667eea;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+}
+
+.error-container button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  .heatmap-page {
+    padding: 1rem;
+  }
+
+  .heatmap-header {
+    padding: 1.25rem 1.5rem;
+  }
+
+  .header-content h1 {
+    font-size: 1.3rem;
+  }
+
+  .controls {
+    gap: 0.75rem;
+  }
+
+  .heatmap-table th.indicator-column {
+    min-width: 160px;
+    max-width: 160px;
+  }
+
+  .indicator-name-link {
+    font-size: 0.8rem;
+  }
+
+  .heatmap-table td.value-cell {
+    min-width: 60px;
+    font-size: 0.75rem;
+  }
+}

@@ -198,6 +198,49 @@
   flex-direction: column;
   gap: 0.25rem;
   align-items: flex-start;
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.expand-icon {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.7rem;
+  color: #6b7280;
+  transition: transform 0.2s;
+}
+
+.expanded-row {
+  background-color: rgba(102, 126, 234, 0.03);
+}
+
+.detail-row {
+  background-color: rgba(243, 244, 246, 0.5);
+  font-size: 0.85rem;
+}
+
+.detail-row td {
+  padding: 0.5rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.detail-label {
+  font-style: italic;
+  color: #6b7280;
+  font-size: 0.75rem;
+  padding-left: 2rem !important;
+}
+
+.variation-label {
+  font-weight: 600;
+}
+
+.detail-cell {
+  font-family: 'Courier New', monospace;
+  font-weight: 700;
+  font-size: 0.8rem;
 }
 
 .indicator-id {
@@ -205,12 +248,44 @@
   color: #667eea;
   font-size: 0.85rem;
   font-family: 'Courier New', monospace;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.indicator-id:hover {
+  color: #5568d3;
+  text-decoration: underline;
+}
+
+.indicator-name-link {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.85rem;
+  text-decoration: none;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.indicator-name-link:hover {
+  color: #667eea;
+  text-decoration: underline;
 }
 
 .indicator-name {
   font-size: 0.75rem;
   color: #6b7280;
   line-height: 1.2;
+}
+
+.indicator-units {
+  font-size: 0.7rem;
+  color: #9ca3af;
+  font-style: italic;
+  font-weight: 400;
+  display: block;
+  margin-top: 0.15rem;
 }
 
 .heatmap-footer {

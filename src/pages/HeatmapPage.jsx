@@ -1,6 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import macroService from '../services/macroService';
-import '../styles/HeatmapPage-modern.css';
+
+// Layout e UI components
+import MainLayout from '../components/layout/MainLayout.jsx';
+import Spinner from '../components/ui/Spinner.jsx';
+import Button from '../components/ui/Button.jsx';
+
+// Stili
+import '../styles/index.css';
+import '../styles/components.css';
+import '../styles/HeatmapPage-dark.css';
 
 /**
  * HeatmapPage - Visualizzazione heatmap degli indicatori economici
@@ -13,6 +22,7 @@ const HeatmapPage = () => {
   const [viewMode, setViewMode] = useState('monthly'); // 'monthly' o 'quarterly'
   const [yearsToShow, setYearsToShow] = useState(2); // Ultimi 2 anni
   const [expandedRows, setExpandedRows] = useState(new Set()); // Righe espanse
+  const [searchFilter, setSearchFilter] = useState(''); // Filtro di ricerca
 
   useEffect(() => {
     loadData();
@@ -194,7 +204,7 @@ const HeatmapPage = () => {
       periods,
       rows
     };
-  }, [data, viewMode, yearsToShow]);
+  }, [data, viewMode, yearsToShow, searchFilter]);
 
   /**
    * Determina il colore della cella in base al miglioramento/peggioramento
@@ -289,106 +299,158 @@ const HeatmapPage = () => {
     });
   };
 
+  /**
+   * Filtra le righe in base al testo di ricerca
+   */
+  const filterRows = (rows) => {
+    if (!searchFilter.trim()) {
+      return rows;
+    }
+    
+    const searchTerm = searchFilter.toLowerCase().trim();
+    return rows.filter(row => 
+      row.name.toLowerCase().includes(searchTerm) ||
+      row.id.toLowerCase().includes(searchTerm) ||
+      row.categoryLabel.toLowerCase().includes(searchTerm)
+    );
+  };
+
   if (loading) {
     return (
-      <div className="heatmap-page">
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p>Caricamento dati economici...</p>
-        </div>
-      </div>
+      <MainLayout 
+        center={
+          <div className="panel">
+            <div className="loading-container">
+              <Spinner />
+              <p>Caricamento dati economici...</p>
+            </div>
+          </div>
+        }
+      />
     );
   }
 
   if (error) {
     return (
-      <div className="heatmap-page">
-        <div className="error-container">
-          <h2>❌ Errore</h2>
-          <p>{error}</p>
-          <button onClick={loadData}>Riprova</button>
-        </div>
-      </div>
+      <MainLayout 
+        center={
+          <div className="panel">
+            <div className="error-container">
+              <h2>❌ Errore</h2>
+              <p>{error}</p>
+              <Button onClick={loadData}>Riprova</Button>
+            </div>
+          </div>
+        }
+      />
     );
   }
 
   if (!heatmapData) {
     return (
-      <div className="heatmap-page">
-        <div className="error-container">
-          <p>Nessun dato disponibile</p>
-        </div>
-      </div>
+      <MainLayout 
+        center={
+          <div className="panel">
+            <div className="error-container">
+              <p>Nessun dato disponibile</p>
+            </div>
+          </div>
+        }
+      />
     );
   }
 
   const { periods, rows } = heatmapData;
+  const filteredRows = filterRows(rows);
 
   return (
-    <div className="heatmap-page">
-      <div className="heatmap-header">
-        <div className="header-content">
-          <h1>📊 Heatmap Indicatori Economici</h1>
-          <p className="subtitle">
-            Variazioni percentuali degli indicatori economici USA
-          </p>
-        </div>
+    <MainLayout 
+      center={
+        <div className="heatmap-content">
+          <div className="panel">
+            <div className="panel-title">
+              📊 Heatmap Indicatori Economici
+            </div>
+            <p className="text-muted">
+              Variazioni percentuali degli indicatori economici USA
+            </p>
 
-        <div className="controls">
-          <div className="control-group">
-            <label>Visualizzazione:</label>
-            <select 
-              value={viewMode} 
-              onChange={(e) => setViewMode(e.target.value)}
-            >
-              <option value="monthly">Mensile</option>
-              <option value="quarterly">Trimestrale</option>
-            </select>
+            <div className="heatmap-controls">
+              <div className="control-group">
+                <label>🔍 Ricerca:</label>
+                <input
+                  type="text"
+                  placeholder="Cerca indicatore..."
+                  value={searchFilter}
+                  onChange={(e) => setSearchFilter(e.target.value)}
+                  className="search-input"
+                />
+                {searchFilter.trim() && (
+                  <span className="search-results-count">
+                    {filteredRows.length} risultat{filteredRows.length === 1 ? 'o' : 'i'}
+                  </span>
+                )}
+              </div>
+
+              <div className="control-group">
+                <label>Visualizzazione:</label>
+                <select 
+                  value={viewMode} 
+                  onChange={(e) => setViewMode(e.target.value)}
+                  className="heatmap-select"
+                >
+                  <option value="monthly">Mensile</option>
+                  <option value="quarterly">Trimestrale</option>
+                </select>
+              </div>
+
+              <div className="control-group">
+                <label>Periodo:</label>
+                <select 
+                  value={yearsToShow} 
+                  onChange={(e) => setYearsToShow(parseInt(e.target.value))}
+                  className="heatmap-select"
+                >
+                  <option value="1">Ultimo anno</option>
+                  <option value="2">Ultimi 2 anni</option>
+                  <option value="3">Ultimi 3 anni</option>
+                  <option value="5">Ultimi 5 anni</option>
+                </select>
+              </div>
+
+              <Button onClick={loadData} className="refresh-btn">
+                🔄 Aggiorna
+              </Button>
+            </div>
           </div>
 
-          <div className="control-group">
-            <label>Periodo:</label>
-            <select 
-              value={yearsToShow} 
-              onChange={(e) => setYearsToShow(parseInt(e.target.value))}
-            >
-              <option value="1">Ultimo anno</option>
-              <option value="2">Ultimi 2 anni</option>
-              <option value="3">Ultimi 3 anni</option>
-              <option value="5">Ultimi 5 anni</option>
-            </select>
+          <div className="panel">
+            <div className="heatmap-legend">
+              <div className="legend-item">
+                <div className="legend-color" style={{ background: 'rgba(239, 68, 68, 0.9)' }}></div>
+                <span>Forte peggioramento</span>
+              </div>
+              <div className="legend-item">
+                <div className="legend-color" style={{ background: 'rgba(239, 68, 68, 0.35)' }}></div>
+                <span>Lieve peggioramento</span>
+              </div>
+              <div className="legend-item">
+                <div className="legend-color" style={{ background: 'rgba(100, 116, 139, 0.1)', border: '1px solid #ccc' }}></div>
+                <span>Stabile / Primo valore</span>
+              </div>
+              <div className="legend-item">
+                <div className="legend-color" style={{ background: 'rgba(34, 197, 94, 0.35)' }}></div>
+                <span>Lieve miglioramento</span>
+              </div>
+              <div className="legend-item">
+                <div className="legend-color" style={{ background: 'rgba(34, 197, 94, 0.9)' }}></div>
+                <span>Forte miglioramento</span>
+              </div>
+            </div>
           </div>
 
-          <button className="refresh-btn" onClick={loadData}>
-            🔄 Aggiorna
-          </button>
-        </div>
-      </div>
-
-      <div className="heatmap-legend">
-        <div className="legend-item">
-          <div className="legend-color" style={{ background: 'rgba(239, 68, 68, 0.9)' }}></div>
-          <span>Forte peggioramento</span>
-        </div>
-        <div className="legend-item">
-          <div className="legend-color" style={{ background: 'rgba(239, 68, 68, 0.35)' }}></div>
-          <span>Lieve peggioramento</span>
-        </div>
-        <div className="legend-item">
-          <div className="legend-color" style={{ background: 'rgba(100, 116, 139, 0.1)', border: '1px solid #ccc' }}></div>
-          <span>Stabile / Primo valore</span>
-        </div>
-        <div className="legend-item">
-          <div className="legend-color" style={{ background: 'rgba(34, 197, 94, 0.35)' }}></div>
-          <span>Lieve miglioramento</span>
-        </div>
-        <div className="legend-item">
-          <div className="legend-color" style={{ background: 'rgba(34, 197, 94, 0.9)' }}></div>
-          <span>Forte miglioramento</span>
-        </div>
-      </div>
-
-      <div className="heatmap-container">
+          <div className="panel">
+            <div className="heatmap-container">
         <div className="heatmap-scroll">
           <table className="heatmap-table">
             <thead>
@@ -402,9 +464,29 @@ const HeatmapPage = () => {
               </tr>
             </thead>
             <tbody>
-              {rows.map((row, rowIdx) => {
-                // Controlla se è la prima riga di una nuova categoria
-                const isFirstInCategory = rowIdx === 0 || rows[rowIdx - 1].category !== row.category;
+              {filteredRows.length === 0 ? (
+                <tr>
+                  <td colSpan={periods.length + 1} className="no-results">
+                    {searchFilter.trim() ? (
+                      <>
+                        🔍 Nessun risultato trovato per "<strong>{searchFilter}</strong>"
+                        <br />
+                        <button 
+                          className="clear-search-btn"
+                          onClick={() => setSearchFilter('')}
+                        >
+                          ✕ Cancella ricerca
+                        </button>
+                      </>
+                    ) : (
+                      'Nessun dato disponibile'
+                    )}
+                  </td>
+                </tr>
+              ) : (
+                filteredRows.map((row, rowIdx) => {
+                  // Controlla se è la prima riga di una nuova categoria
+                  const isFirstInCategory = rowIdx === 0 || filteredRows[rowIdx - 1].category !== row.category;
                 
                 return (
                   <React.Fragment key={row.id}>
@@ -498,23 +580,29 @@ const HeatmapPage = () => {
                     )}
                   </React.Fragment>
                 );
-              })}
-            </tbody>
-          </table>
+                })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="panel tight">
+          <div className="heatmap-footer">
+            <p className="text-muted">
+              <strong>Fonte dati:</strong> Federal Reserve Economic Data (FRED) via Google Cloud Run
+            </p>
+            <p className="small-muted">
+              <strong>Nota:</strong> I colori rappresentano la variazione percentuale rispetto al periodo precedente.
+              Verde = crescita, Rosso = decrescita. Per indicatori come disoccupazione e volatilità, i colori sono invertiti.
+            </p>
+          </div>
+          </div>
         </div>
       </div>
-
-      <div className="heatmap-footer">
-        <p>
-          <strong>Fonte dati:</strong> Federal Reserve Economic Data (FRED) via Google Cloud Run
-        </p>
-        <p>
-          <strong>Nota:</strong> I colori rappresentano la variazione percentuale rispetto al periodo precedente.
-          Verde = crescita, Rosso = decrescita. Per indicatori come disoccupazione e volatilità, i colori sono invertiti.
-        </p>
-      </div>
-    </div>
-  );
+        }
+      />
+    );
 };
 
 export default HeatmapPage;

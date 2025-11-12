@@ -154,217 +154,791 @@ export default function BacktestForm({ onResult, onFormChange }) {
   const weightBarClass = (totalPercent < 99 || totalPercent > 101) ? 'weight-bar weight-bar-warning' : 'weight-bar';
 
   return (
-    <div 
-      className="panel" 
-      aria-busy={loading ? 'true' : 'false'} 
-      style={{ 
-        padding: 20,
-        background: 'linear-gradient(135deg, rgba(102, 187, 106, 0.05) 0%, rgba(102, 187, 106, 0.1) 100%)',
-        border: '2px solid rgba(102, 187, 106, 0.3)',
-        borderRadius: 12,
-        animation: 'fadeIn 0.6s ease-out',
-        position: 'relative'
-      }}
-    >
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '32px',
+      padding: '0',
+      animation: 'fadeIn 0.6s ease-out',
+      position: 'relative'
+    }}>
       {loading && (
         <div style={{
-          position: 'absolute',
-          top: 15,
-          right: 20,
-          backgroundColor: '#ff9800',
-          color: '#fff',
-          padding: '4px 8px',
-          borderRadius: 12,
-          fontSize: 11,
-          fontWeight: 600,
+          position: 'fixed',
+          top: '24px',
+          right: '24px',
+          background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+          color: '#ffffff',
+          padding: '12px 20px',
+          borderRadius: '28px',
+          fontSize: '13px',
+          fontWeight: '700',
           display: 'flex',
           alignItems: 'center',
-          gap: '5px'
+          gap: '10px',
+          boxShadow: '0 12px 40px rgba(99, 102, 241, 0.5), 0 4px 16px rgba(139, 92, 246, 0.3)',
+          animation: 'bounceIn 0.6s ease-out',
+          zIndex: 1000,
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          backdropFilter: 'blur(10px)'
         }}>
-          ⏳ Elaborando...
+          <div style={{ 
+            width: '14px', 
+            height: '14px', 
+            borderRadius: '50%',
+            background: 'linear-gradient(45deg, #ffffff 0%, #e0e7ff 100%)',
+            animation: 'spin 2s linear infinite',
+            boxShadow: '0 0 8px rgba(255, 255, 255, 0.5)'
+          }} />
+          Elaborando Backtest
         </div>
       )}
       
-      <h2 style={{ 
-        color: '#66bb6a', 
-        margin: '0 0 20px 0', 
-        textAlign: 'left',
-        fontSize: 18,
-        fontWeight: 600,
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px'
+      <div style={{
+        textAlign: 'center',
+        marginBottom: '8px',
+        position: 'relative'
       }}>
-        ⚙️ Parametri Finanziari e Temporali
-      </h2>
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '200px',
+          height: '2px',
+          background: 'linear-gradient(90deg, transparent 0%, rgba(99, 102, 241, 0.3) 50%, transparent 100%)',
+          zIndex: 0
+        }} />
+        <h2 style={{ 
+          color: '#f8fafc', 
+          margin: 0,
+          fontSize: '28px',
+          fontWeight: '800',
+          letterSpacing: '-0.02em',
+          background: 'linear-gradient(135deg, #f8fafc 0%, #cbd5e1 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
+          position: 'relative',
+          zIndex: 1,
+          padding: '0 24px',
+          backgroundColor: '#0a0a0a'
+        }}>
+          Configurazione Backtest
+        </h2>
+        <div style={{
+          fontSize: '14px',
+          color: '#64748b',
+          fontWeight: '500',
+          marginTop: '6px',
+          letterSpacing: '0.05em'
+        }}>
+          Imposta i parametri per l'analisi del portafoglio
+        </div>
+      </div>
 
-      {/* Top two-column block */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        <div>
-          <div style={{ marginBottom: 10 }}>
-            <label style={{ color: '#bdbdbd', fontSize: 13 }}>Investimento Iniziale (EUR)</label>
-            <Input type="number" value={initialInvestment} onChange={(e) => setInitialInvestment(e.target.value)} />
+      {/* Parametri Finanziari */}
+      <div style={{
+        background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.02) 100%)',
+        borderRadius: '20px',
+        padding: '28px',
+        position: 'relative',
+        overflow: 'hidden',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.2), 0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        animation: 'slideInUp 0.6s ease-out'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-4px)';
+        e.currentTarget.style.boxShadow = '0 32px 80px rgba(0, 0, 0, 0.3), 0 12px 40px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15)';
+        e.currentTarget.style.background = 'linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.04) 100%)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = '0 20px 60px rgba(0, 0, 0, 0.2), 0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+        e.currentTarget.style.background = 'linear-gradient(145deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.02) 100%)';
+      }}>
+        {/* Badge decorativo */}
+        <div style={{
+          position: 'absolute',
+          top: '16px',
+          right: '20px',
+          width: '6px',
+          height: '6px',
+          borderRadius: '50%',
+          background: 'rgba(255, 255, 255, 0.4)',
+          boxShadow: '0 0 12px rgba(255, 255, 255, 0.3)'
+        }} />
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+          <h3 style={{
+            color: '#f8fafc',
+            fontSize: '16px',
+            fontWeight: '700',
+            margin: 0,
+            letterSpacing: '-0.01em'
+          }}>
+            Parametri Investimento
+          </h3>
+          <div style={{
+            flex: 1,
+            height: '1px',
+            background: 'linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, transparent 100%)',
+            marginLeft: '12px'
+          }} />
+        </div>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+          <div>
+            <label style={{ 
+              color: '#64748b', 
+              fontSize: '11px', 
+              fontWeight: '600',
+              display: 'block', 
+              marginBottom: '8px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em'
+            }}>
+              Investimento Iniziale
+            </label>
+            <div style={{ position: 'relative' }}>
+              <Input 
+                type="number" 
+                value={initialInvestment} 
+                onChange={(e) => setInitialInvestment(e.target.value)}
+                style={{
+                  background: 'rgba(0, 0, 0, 0.3)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '12px',
+                  padding: '14px 16px',
+                  paddingRight: '50px',
+                  color: '#f8fafc',
+                  fontSize: '15px',
+                  fontWeight: '600',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  backdropFilter: 'blur(10px)'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = 'rgba(59, 130, 246, 0.5)';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+                  e.target.style.background = 'rgba(0, 0, 0, 0.4)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                  e.target.style.boxShadow = 'none';
+                  e.target.style.background = 'rgba(0, 0, 0, 0.3)';
+                }}
+              />
+              <span style={{
+                position: 'absolute',
+                right: '16px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: 'rgba(255, 255, 255, 0.5)',
+                fontSize: '13px',
+                fontWeight: '600'
+              }}>
+                EUR
+              </span>
+            </div>
           </div>
-
-          <div style={{ marginBottom: 10 }}>
-            <label style={{ color: '#bdbdbd', fontSize: 13 }}>Frequenza Contribuzione</label>
-            <select value={frequency} onChange={(e) => setFrequency(e.target.value)} style={{ width: '100%', padding: 8, borderRadius: 6, background: '#0b0b0b', color: '#e6e6e6', border: '1px solid rgba(255,255,255,0.03)' }}>
+          
+          <div>
+            <label style={{ 
+              color: '#64748b', 
+              fontSize: '11px', 
+              fontWeight: '600',
+              display: 'block', 
+              marginBottom: '8px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em'
+            }}>
+              Contributo Annuo
+            </label>
+            <div style={{ position: 'relative' }}>
+              <Input 
+                type="number" 
+                value={annualContribution} 
+                onChange={(e) => setAnnualContribution(e.target.value)}
+                style={{
+                  background: 'rgba(0, 0, 0, 0.3)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '12px',
+                  padding: '14px 16px',
+                  paddingRight: '80px',
+                  color: '#f8fafc',
+                  fontSize: '15px',
+                  fontWeight: '600',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  backdropFilter: 'blur(10px)'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = 'rgba(59, 130, 246, 0.5)';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+                  e.target.style.background = 'rgba(0, 0, 0, 0.4)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                  e.target.style.boxShadow = 'none';
+                  e.target.style.background = 'rgba(0, 0, 0, 0.3)';
+                }}
+              />
+              <span style={{
+                position: 'absolute',
+                right: '16px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: '#3b82f6',
+                fontSize: '12px',
+                fontWeight: '700',
+                textShadow: '0 0 8px rgba(59, 130, 246, 0.5)'
+              }}>
+                EUR/anno
+              </span>
+            </div>
+          </div>
+          
+          <div>
+            <label style={{ 
+              color: '#64748b', 
+              fontSize: '11px', 
+              fontWeight: '600',
+              display: 'block', 
+              marginBottom: '8px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em'
+            }}>
+              Frequenza Contributi
+            </label>
+            <select 
+              value={frequency} 
+              onChange={(e) => setFrequency(e.target.value)} 
+              style={{ 
+                width: '100%', 
+                padding: '14px 16px', 
+                borderRadius: '12px', 
+                background: 'rgba(0, 0, 0, 0.3)', 
+                color: '#f8fafc', 
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                fontSize: '15px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                backdropFilter: 'blur(10px)'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                e.target.style.boxShadow = '0 0 0 3px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+                e.target.style.background = 'rgba(0, 0, 0, 0.4)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                e.target.style.boxShadow = 'none';
+                e.target.style.background = 'rgba(0, 0, 0, 0.3)';
+              }}
+            >
               <option>Mensile</option>
               <option>Annuale</option>
               <option>Mensile (x12)</option>
             </select>
           </div>
         </div>
-
-        <div>
-          <div style={{ marginBottom: 10 }}>
-            <label style={{ color: '#bdbdbd', fontSize: 13 }}>Contributo Annuo (EUR)</label>
-            <Input type="number" value={annualContribution} onChange={(e) => setAnnualContribution(e.target.value)} />
-          </div>
-
-          <div style={{ marginBottom: 10 }}>
-            <label style={{ color: '#bdbdbd', fontSize: 13 }}>Data Inizio</label>
-            <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-          </div>
-        </div>
       </div>
 
-      {/* Data Fine full width on next row (like screenshot) */}
-      <div style={{ marginTop: 10 }}>
-        <label style={{ color: '#bdbdbd', fontSize: 13 }}>Data Fine</label>
-        <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+      {/* Periodo Temporale */}
+      <div style={{
+        background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.02) 100%)',
+        borderRadius: '20px',
+        padding: '28px',
+        position: 'relative',
+        overflow: 'hidden',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.2), 0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        animation: 'slideInUp 0.8s ease-out'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-4px)';
+        e.currentTarget.style.boxShadow = '0 32px 80px rgba(0, 0, 0, 0.3), 0 12px 40px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15)';
+        e.currentTarget.style.background = 'linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.04) 100%)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = '0 20px 60px rgba(0, 0, 0, 0.2), 0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+        e.currentTarget.style.background = 'linear-gradient(145deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.02) 100%)';
+      }}>
+        {/* Badge decorativo */}
+        <div style={{
+          position: 'absolute',
+          top: '16px',
+          right: '20px',
+          width: '6px',
+          height: '6px',
+          borderRadius: '50%',
+          background: 'rgba(255, 255, 255, 0.4)',
+          boxShadow: '0 0 12px rgba(255, 255, 255, 0.3)'
+        }} />
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+          <h3 style={{
+            color: '#f8fafc',
+            fontSize: '16px',
+            fontWeight: '700',
+            margin: 0,
+            letterSpacing: '-0.01em'
+          }}>
+            Periodo di Analisi
+          </h3>
+          <div style={{
+            flex: 1,
+            height: '1px',
+            background: 'linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, transparent 100%)',
+            marginLeft: '12px'
+          }} />
+        </div>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+          <div>
+            <label style={{ 
+              color: '#64748b', 
+              fontSize: '11px', 
+              fontWeight: '600',
+              display: 'block', 
+              marginBottom: '8px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em'
+            }}>
+              Data Inizio
+            </label>
+            <Input 
+              type="date" 
+              value={startDate} 
+              onChange={(e) => setStartDate(e.target.value)}
+              style={{
+                background: 'rgba(0, 0, 0, 0.3)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '12px',
+                padding: '14px 16px',
+                color: '#f8fafc',
+                fontSize: '15px',
+                fontWeight: '600',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                backdropFilter: 'blur(10px)'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = 'rgba(34, 197, 94, 0.5)';
+                e.target.style.boxShadow = '0 0 0 3px rgba(34, 197, 94, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+                e.target.style.background = 'rgba(0, 0, 0, 0.4)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                e.target.style.boxShadow = 'none';
+                e.target.style.background = 'rgba(0, 0, 0, 0.3)';
+              }}
+            />
+          </div>
+          <div>
+            <label style={{ 
+              color: '#64748b', 
+              fontSize: '11px', 
+              fontWeight: '600',
+              display: 'block', 
+              marginBottom: '8px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em'
+            }}>
+              Data Fine
+            </label>
+            <Input 
+              type="date" 
+              value={endDate} 
+              onChange={(e) => setEndDate(e.target.value)}
+              style={{
+                background: 'rgba(0, 0, 0, 0.3)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '12px',
+                padding: '14px 16px',
+                color: '#f8fafc',
+                fontSize: '15px',
+                fontWeight: '600',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                backdropFilter: 'blur(10px)'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = 'rgba(34, 197, 94, 0.5)';
+                e.target.style.boxShadow = '0 0 0 3px rgba(34, 197, 94, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+                e.target.style.background = 'rgba(0, 0, 0, 0.4)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                e.target.style.boxShadow = 'none';
+                e.target.style.background = 'rgba(0, 0, 0, 0.3)';
+              }}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Selezione Assets e Pesi */}
       <div style={{ 
-        marginTop: 25,
-        padding: '15px',
-        background: 'rgba(0, 0, 0, 0.15)',
-        borderRadius: 10,
-        border: '1px solid rgba(102, 187, 106, 0.2)',
-        animation: 'slideInUp 0.5s ease-out 0.2s both'
+        background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.02) 100%)',
+        borderRadius: '20px',
+        padding: '28px',
+        position: 'relative',
+        overflow: 'hidden',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.2), 0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        animation: 'slideInUp 1s ease-out'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-4px)';
+        e.currentTarget.style.boxShadow = '0 32px 80px rgba(0, 0, 0, 0.3), 0 12px 40px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15)';
+        e.currentTarget.style.background = 'linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.04) 100%)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = '0 20px 60px rgba(0, 0, 0, 0.2), 0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+        e.currentTarget.style.background = 'linear-gradient(145deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.02) 100%)';
       }}>
-        <h3 style={{ 
-          color: '#66bb6a', 
-          margin: '0 0 15px 0',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px'
+        {/* Badge decorativo */}
+        <div style={{
+          position: 'absolute',
+          top: '16px',
+          right: '20px',
+          width: '8px',
+          height: '8px',
+          borderRadius: '50%',
+          background: 'linear-gradient(45deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.6) 100%)',
+          boxShadow: '0 0 16px rgba(255, 255, 255, 0.3)'
+        }} />
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+          <h3 style={{
+            color: '#f8fafc',
+            fontSize: '16px',
+            fontWeight: '700',
+            margin: 0,
+            letterSpacing: '-0.01em'
+          }}>
+            Composizione Portafoglio
+          </h3>
+          <div style={{
+            flex: 1,
+            height: '1px',
+            background: 'linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, transparent 100%)',
+            marginLeft: '12px'
+          }} />
+        </div>
+
+        {/* Controls + Weight bar */}
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: '1fr auto 280px', 
+          gap: '16px', 
+          alignItems: 'center', 
+          marginBottom: '16px',
+          padding: '12px',
+          background: 'rgba(0, 0, 0, 0.1)',
+          borderRadius: '8px',
+          border: '1px solid rgba(255, 255, 255, 0.02)'
         }}>
-          💼 Selezione Assets e Pesi
-        </h3>
-
-        <div style={{ marginBottom: 8, color: '#bdbdbd' }}>Obiettivo Analisi:</div>
-        <div style={{ marginBottom: 12 }}>
-          <select style={{ width: '100%', padding: 8, borderRadius: 6, background: '#0b0b0b', color: '#e6e6e6', border: '1px solid rgba(255,255,255,0.03)' }}>
-            <option>1. Pesi Statici Utente</option>
-          </select>
-        </div>
-
-        {/* Weight bar + normalize */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ color: '#9e9e9e', fontSize: 13, marginBottom: 6 }}>Assets nel Portafoglio (100% Allocato)</div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <div className={weightBarClass} style={{ flex: 1 }}>
-                <div className="fill" style={{ width: `${Math.min(100, Math.max(0, totalPercent))}%` }} />
+          <div>
+            <TickerSearch 
+              onSelect={handleAddTicker} 
+              placeholder="Aggiungi asset..."
+              style={{
+                background: 'rgba(0, 0, 0, 0.2)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                borderRadius: '8px'
+              }}
+            />
+          </div>
+          
+          <Button 
+            onClick={normalizeWeights} 
+            variant="secondary" 
+            disabled={loading}
+            style={{
+              background: 'rgba(99, 102, 241, 0.1)',
+              border: '1px solid rgba(99, 102, 241, 0.2)',
+              color: '#6366f1',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              fontSize: '12px',
+              fontWeight: '600',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            Normalizza
+          </Button>
+          
+          <div style={{ width: '280px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <div style={{ 
+                flex: 1, 
+                height: '6px',
+                background: 'rgba(255, 255, 255, 0.05)',
+                borderRadius: '3px',
+                overflow: 'hidden'
+              }}>
+                <div style={{ 
+                  width: `${Math.min(100, Math.max(0, totalPercent))}%`, 
+                  height: '100%',
+                  background: totalPercent >= 99 && totalPercent <= 101 
+                    ? 'linear-gradient(90deg, #22c55e 0%, #16a34a 100%)'
+                    : 'linear-gradient(90deg, #f59e0b 0%, #d97706 100%)',
+                  borderRadius: '3px',
+                  transition: 'all 0.3s ease'
+                }} />
               </div>
-              <div style={{ minWidth: 48, textAlign: 'right', color: '#9e9e9e' }}>{totalPercent}%</div>
+              <div style={{
+                minWidth: '48px',
+                textAlign: 'center',
+                color: totalPercent >= 99 && totalPercent <= 101 ? '#22c55e' : '#f59e0b',
+                fontSize: '12px',
+                fontWeight: '700'
+              }}>
+                {totalPercent}%
+              </div>
             </div>
-            <div style={{ fontSize: 12, color: '#9e9e9e', marginTop: 6 }}>Barra di stato pesi (la somma dovrebbe essere 100%). Puoi impostare commissioni per singolo asset. Se non presenti, verranno usati i valori globali di seguito.</div>
-          </div>
-
-          <div style={{ width: 140, textAlign: 'right' }}>
-            <Button onClick={normalizeWeights} variant="secondary" disabled={loading}>Normalizza pesi</Button>
+            <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '500' }}>
+              Allocazione totale (target: 100%)
+            </div>
           </div>
         </div>
 
-        {/* Search */}
-        <div style={{ marginTop: 10 }}>
-          <TickerSearch onSelect={handleAddTicker} placeholder="Cerca Ticker (es. SPY, BND)" />
-        </div>
-
-        {/* Table header + assets */}
-        <div style={{ marginTop: 12 }}>
-          <div style={{ background: 'linear-gradient(180deg,#171717,#141414)', padding: 10, borderRadius: 8 }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ textAlign: 'left', color: '#cfcfcf', fontSize: 13 }}>
-                  <th style={{ padding: '8px 10px', width: 80 }}>Ticker</th>
-                  <th style={{ padding: '8px 10px' }}>Nome</th>
-                  <th style={{ padding: '8px 10px', width: 120 }}>Peso (%)</th>
-                  <th style={{ padding: '8px 10px', width: 120 }}>Entry Fee (%)</th>
-                  <th style={{ padding: '8px 10px', width: 120 }}>Annual Fee (%)</th>
-                  <th style={{ padding: '8px 10px', width: 90 }}></th>
-                </tr>
-              </thead>
-              <tbody>
-                {assets.map((a, i) => (
-                  // AssetRow component should render a row interface; if it doesn't, we fallback to inline row here
-                  <tr key={`${a.ticker}-${i}`} style={{ borderTop: '1px solid rgba(255,255,255,0.02)' }}>
-                    <td style={{ padding: '10px' }}>{a.ticker}</td>
-                    <td style={{ padding: '10px' }}>{a.name}</td>
-                    <td style={{ padding: '10px' }}>
-                      <Input type="number" value={(Number(a.weight) * 100).toFixed(2)} onChange={(e) => updateAsset(i, 'weight', e.target.value)} />
-                    </td>
-                    <td style={{ padding: '10px' }}>
-                      <Input type="number" step="0.01" value={a.entry_fee_percent} onChange={(e) => updateAsset(i, 'entry_fee_percent', e.target.value)} />
-                    </td>
-                    <td style={{ padding: '10px' }}>
-                      <Input type="number" step="0.01" value={a.annual_fee_percent} onChange={(e) => updateAsset(i, 'annual_fee_percent', e.target.value)} />
-                    </td>
-                    <td style={{ padding: '10px', textAlign: 'right' }}>
-                      <Button onClick={() => removeAsset(i)} variant="danger" small>Rimuovi</Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* Tabella Assets - Design moderno */}
+        <div style={{
+          background: 'rgba(0, 0, 0, 0.1)',
+          borderRadius: '8px',
+          border: '1px solid rgba(255, 255, 255, 0.02)',
+          overflow: 'hidden'
+        }}>
+          <div style={{ 
+            background: 'rgba(255, 255, 255, 0.02)',
+            padding: '8px 12px',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.04)'
+          }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: '80px 1fr 100px 90px 90px 60px',
+              gap: '12px',
+              alignItems: 'center',
+              color: '#64748b',
+              fontSize: '11px',
+              fontWeight: '600',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em'
+            }}>
+              <div>Ticker</div>
+              <div>Nome Asset</div>
+              <div>Peso %</div>
+              <div>Entry %</div>
+              <div>Annual %</div>
+              <div></div>
+            </div>
+          </div>
+          
+          <div>
+            {assets.map((a, i) => (
+              <div 
+                key={`${a.ticker}-${i}`} 
+                style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: '80px 1fr 100px 90px 90px 60px',
+                  gap: '12px',
+                  alignItems: 'center',
+                  padding: '12px',
+                  borderBottom: i < assets.length - 1 ? '1px solid rgba(255, 255, 255, 0.02)' : 'none',
+                  transition: 'background 0.2s ease'
+                }}
+                onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.02)'}
+                onMouseLeave={(e) => e.target.style.background = 'transparent'}
+              >
+                <div style={{ 
+                  fontWeight: '700', 
+                  color: '#f8fafc',
+                  fontSize: '13px'
+                }}>
+                  {a.ticker}
+                </div>
+                <div style={{ 
+                  fontSize: '12px', 
+                  color: '#94a3b8',
+                  fontWeight: '500'
+                }}>
+                  {a.name}
+                </div>
+                <Input 
+                  type="number" 
+                  value={(Number(a.weight) * 100).toFixed(2)} 
+                  onChange={(e) => updateAsset(i, 'weight', e.target.value)}
+                  style={{ 
+                    padding: '6px 8px', 
+                    fontSize: '12px',
+                    background: 'rgba(0, 0, 0, 0.2)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '6px',
+                    color: '#f8fafc'
+                  }}
+                />
+                <Input 
+                  type="number" 
+                  step="0.01" 
+                  value={a.entry_fee_percent} 
+                  onChange={(e) => updateAsset(i, 'entry_fee_percent', e.target.value)}
+                  style={{ 
+                    padding: '6px 8px', 
+                    fontSize: '12px',
+                    background: 'rgba(0, 0, 0, 0.2)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '6px',
+                    color: '#f8fafc'
+                  }}
+                />
+                <Input 
+                  type="number" 
+                  step="0.01" 
+                  value={a.annual_fee_percent} 
+                  onChange={(e) => updateAsset(i, 'annual_fee_percent', e.target.value)}
+                  style={{ 
+                    padding: '6px 8px', 
+                    fontSize: '12px',
+                    background: 'rgba(0, 0, 0, 0.2)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '6px',
+                    color: '#f8fafc'
+                  }}
+                />
+                <button
+                  onClick={() => removeAsset(i)}
+                  style={{
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.2)',
+                    color: '#ef4444',
+                    padding: '6px',
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = 'rgba(239, 68, 68, 0.2)';
+                    e.target.style.transform = 'scale(1.05)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = 'rgba(239, 68, 68, 0.1)';
+                    e.target.style.transform = 'scale(1)';
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
       {error && (
-        <div style={{ marginTop: 12, padding: 10, borderRadius: 8, background: '#3b1f1f', color: '#ffd6d6' }}>
+        <div style={{ 
+          marginTop: '16px',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          background: 'rgba(239, 68, 68, 0.1)',
+          border: '1px solid rgba(239, 68, 68, 0.2)',
+          color: '#fca5a5',
+          fontSize: '13px',
+          fontWeight: '500'
+        }}>
           {error}
         </div>
       )}
 
-      {/* Action button bottom */}
+      {/* Hero Action Button */}
       <div style={{ 
-        marginTop: 25, 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center',
-        padding: '15px',
-        background: 'rgba(0, 0, 0, 0.1)',
-        borderRadius: 10,
-        animation: 'slideInUp 0.5s ease-out 0.4s both'
+        marginTop: '40px',
+        display: 'flex',
+        justifyContent: 'center',
+        position: 'relative'
       }}>
+        {/* Decorative background */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'radial-gradient(ellipse at center, rgba(255, 255, 255, 0.1) 0%, transparent 70%)',
+          borderRadius: '20px',
+          filter: 'blur(20px)'
+        }} />
+        
         <Button 
           onClick={handleRunBacktest} 
           variant="primary" 
           disabled={loading}
           style={{
-            backgroundColor: loading ? '#999' : '#66bb6a',
-            color: '#fff',
-            padding: '12px 32px',
-            fontSize: 16,
-            fontWeight: 600,
-            border: 'none',
-            borderRadius: 8,
+            position: 'relative',
+            background: loading 
+              ? 'rgba(71, 85, 105, 0.5)' 
+              : 'linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.25) 80%, rgba(255, 255, 255, 0.3) 100%)',
+            color: '#ffffff',
+            padding: '16px 40px',
+            fontSize: '15px',
+            fontWeight: '800',
+            border: loading ? '1px solid rgba(71, 85, 105, 0.3)' : '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '16px',
             cursor: loading ? 'not-allowed' : 'pointer',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '10px',
-            minWidth: '220px',
+            gap: '12px',
+            minWidth: '280px',
             justifyContent: 'center',
-            boxShadow: loading ? '0 2px 8px rgba(0, 0, 0, 0.1)' : '0 6px 20px rgba(102, 187, 106, 0.3)',
-            transform: loading ? 'scale(0.98)' : 'scale(1)'
+            backdropFilter: 'blur(10px)',
+            boxShadow: loading 
+              ? '0 8px 20px rgba(0, 0, 0, 0.2)' 
+              : '0 16px 40px rgba(255, 255, 255, 0.2), 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+            transform: loading ? 'scale(0.98)' : 'scale(1)',
+            letterSpacing: '0.02em',
+            textTransform: 'uppercase',
+            textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)'
+          }}
+          onMouseEnter={(e) => {
+            if (!loading) {
+              e.target.style.transform = 'scale(1.05) translateY(-2px)';
+              e.target.style.boxShadow = '0 24px 60px rgba(255, 255, 255, 0.3), 0 8px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3)';
+              e.target.style.background = 'linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.35) 80%, rgba(255, 255, 255, 0.4) 100%)';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!loading) {
+              e.target.style.transform = 'scale(1)';
+              e.target.style.boxShadow = '0 16px 40px rgba(255, 255, 255, 0.2), 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
+              e.target.style.background = 'linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.25) 80%, rgba(255, 255, 255, 0.3) 100%)';
+            }
           }}
         >
-          {loading ? '⏳ Eseguendo analisi...' : '🚀 Esegui Backtest Statico'}
+          {loading ? (
+            <>
+              <div style={{
+                width: '16px',
+                height: '16px',
+                border: '2px solid rgba(255, 255, 255, 0.3)',
+                borderTop: '2px solid #ffffff',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite'
+              }} />
+              Elaborando
+            </>
+          ) : (
+            <>
+              Esegui Backtest
+            </>
+          )}
         </Button>
       </div>
     </div>

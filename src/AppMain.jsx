@@ -251,20 +251,7 @@ export default function AppMain() {
   }, [formParams, backtestResults]);
 
   // simplified toolbar to match legacy (title/logo only)
-  const renderToolbar = () => (
-    <div className="toolbar-slim" style={{ display: 'flex', gap: 12, alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-      <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-        <img src={ReactLogo} alt="logo" style={{ width: 36, height: 36 }} />
-        <div>
-          <strong className="panel-title" style={{ display: 'block', color: '#66bb6a' }}>Simulatore di Backtest Finanziario</strong>
-          <small style={{ color: '#aeb3b3' }}>Interfaccia modulare</small>
-        </div>
-      </div>
-
-      {/* right side left intentionally empty to match legacy minimalist header */}
-      <div style={{ minWidth: 24 }} />
-    </div>
-  );
+  const renderToolbar = () => null;
 
   const renderCenter = () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -275,8 +262,80 @@ export default function AppMain() {
         <BacktestForm onResult={handleResult} onFormChange={setFormParams} />
       </div>
 
-      <section aria-labelledby="summary-heading">
-        <h3 id="summary-heading" className="panel-title" style={{ margin: '6px 0' }}>Risultati Backtest</h3>
+      {/* Separatore visivo tra form e risultati */}
+      <div style={{
+        height: '80px',
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        margin: '40px 0'
+      }}>
+        <div style={{
+          width: '100%',
+          height: '1px',
+          background: 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.1) 20%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0.1) 80%, transparent 100%)',
+          position: 'relative'
+        }}>
+          {/* Punto centrale luminoso */}
+          <div style={{
+            position: 'absolute',
+            left: '50%',
+            top: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: '8px',
+            height: '8px',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.3) 70%, transparent 100%)',
+            boxShadow: '0 0 20px rgba(255, 255, 255, 0.4), 0 0 40px rgba(255, 255, 255, 0.2)'
+          }} />
+        </div>
+      </div>
+
+      <section aria-labelledby="summary-heading" style={{ marginTop: 0 }}>
+        <div style={{
+          textAlign: 'center',
+          marginBottom: '32px',
+          position: 'relative'
+        }}>
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: '200px',
+            height: '2px',
+            background: 'linear-gradient(90deg, transparent 0%, rgba(99, 102, 241, 0.3) 50%, transparent 100%)',
+            zIndex: 0
+          }} />
+          <h3 id="summary-heading" style={{ 
+            color: '#f8fafc', 
+            margin: 0,
+            fontSize: '28px',
+            fontWeight: '800',
+            letterSpacing: '-0.02em',
+            background: 'linear-gradient(135deg, #f8fafc 0%, #cbd5e1 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            position: 'relative',
+            zIndex: 1,
+            padding: '0 24px',
+            backgroundColor: '#0a0a0a'
+          }}>
+            Risultati Backtest
+          </h3>
+          <div style={{
+            fontSize: '14px',
+            color: '#64748b',
+            fontWeight: '500',
+            marginTop: '6px',
+            letterSpacing: '0.05em'
+          }}>
+            Analisi delle performance del portafoglio
+          </div>
+
+        </div>
         
         {/* Grafico a torta della composizione del portafoglio */}
         {backtestResults && formParams && formParams.assets && (
@@ -288,20 +347,33 @@ export default function AppMain() {
           </div>
         )}
         
-        <BacktestSummary result={backtestResults} />
+        {backtestResults && <BacktestSummary result={backtestResults} />}
+        
+        {/* Fallback quando non ci sono risultati */}
+        {!backtestResults && (
+          <div style={{ 
+            padding: 40, 
+            textAlign: 'center', 
+            color: '#999',
+            background: 'rgba(102, 187, 106, 0.05)',
+            borderRadius: 8,
+            border: '1px dashed rgba(102, 187, 106, 0.2)'
+          }}>
+            🔄 Esegui il backtest per visualizzare i risultati dell'analisi
+          </div>
+        )}
       </section>
 
-      {/* Sezione per eseguire la frontiera efficiente */}
+      {/* Sezione Frontiera Efficiente - Layout compatto */}
       {backtestResults && (
         <section aria-labelledby="frontier-action-heading" style={{ 
-          marginTop: 20, 
+          marginTop: 25, 
           animation: 'fadeIn 0.6s ease-out' 
         }}>
           <div style={{ 
-            padding: 20, 
-            textAlign: 'center', 
+            padding: 15, 
             backgroundColor: frontierData ? 'rgba(102, 187, 106, 0.08)' : 'rgba(102, 187, 106, 0.05)', 
-            borderRadius: 12,
+            borderRadius: 10,
             transition: 'all 0.4s ease',
             position: 'relative',
             overflow: 'hidden'
@@ -309,13 +381,13 @@ export default function AppMain() {
             {frontierData && (
               <div style={{
                 position: 'absolute',
-                top: 15,
-                right: 20,
+                top: 12,
+                right: 15,
                 backgroundColor: '#66bb6a',
                 color: '#fff',
-                padding: '4px 8px',
-                borderRadius: 12,
-                fontSize: 11,
+                padding: '3px 6px',
+                borderRadius: 8,
+                fontSize: 10,
                 fontWeight: 600,
                 textTransform: 'uppercase',
                 letterSpacing: '0.5px'
@@ -323,86 +395,70 @@ export default function AppMain() {
                 ✓ Calcolata
               </div>
             )}
-            <h3 id="frontier-action-heading" className="panel-title" style={{ 
-              color: '#66bb6a', 
-              margin: '0 0 15px 0', 
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px'
-            }}>
-              📊 Analizza la Frontiera Efficiente
-            </h3>
-            <p style={{ color: '#ccc', margin: '0 0 20px 0', fontSize: 14, lineHeight: 1.4, maxWidth: '600px', margin: '0 auto 20px auto' }}>
-              {frontierData 
-                ? '✨ Frontiera efficiente calcolata con successo! Esplora i portafogli ottimali e le simulazioni interattive.' 
-                : 'Esplora la relazione rischio-rendimento del tuo portafoglio e scopri composizioni ottimali attraverso l\'analisi della frontiera efficiente.'
-              }
-            </p>
-            <div style={{ position: 'relative', display: 'inline-block' }}>
+            
+            {/* Header compatto */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <h3 id="frontier-action-heading" className="panel-title" style={{ 
+                color: '#66bb6a', 
+                margin: 0, 
+                fontSize: 16,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}>
+                📊 Frontiera Efficiente
+              </h3>
+              <div style={{ fontSize: 12, color: '#ccc', maxWidth: '400px' }}>
+                {frontierData 
+                  ? 'Esplora portafogli ottimali e simulazioni interattive' 
+                  : 'Scopri composizioni ottimali rischio-rendimento'
+                }
+              </div>
+            </div>
+            {/* Bottone principale - più compatto */}
+            <div style={{ textAlign: 'center' }}>
               <Button 
                 onClick={frontierData ? () => setShowFrontier(!showFrontier) : calculateEfficientFrontier}
                 disabled={calculatingFrontier}
                 style={{ 
                   backgroundColor: calculatingFrontier ? '#999' : (showFrontier ? '#ff9800' : '#66bb6a'),
                   color: '#fff',
-                  padding: '14px 32px',
-                  fontSize: 16,
+                  padding: '10px 20px',
+                  fontSize: 14,
                   fontWeight: 600,
                   border: 'none',
-                  borderRadius: 8,
+                  borderRadius: 6,
                   cursor: calculatingFrontier ? 'not-allowed' : 'pointer',
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   opacity: calculatingFrontier ? 0.6 : 1,
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '10px',
-                  margin: '0 auto',
-                  minWidth: '240px',
+                  gap: '8px',
+                  minWidth: '200px',
                   boxShadow: calculatingFrontier 
                     ? '0 2px 8px rgba(0, 0, 0, 0.1)' 
-                    : (showFrontier ? '0 6px 20px rgba(255, 152, 0, 0.3)' : '0 6px 20px rgba(102, 187, 106, 0.3)'),
-                  transform: calculatingFrontier ? 'scale(0.98)' : 'scale(1)',
-                  position: 'relative',
-                  overflow: 'hidden'
-                }}
-                onMouseEnter={(e) => {
-                  if (!calculatingFrontier) {
-                    e.target.style.transform = 'scale(1.05)';
-                    e.target.style.boxShadow = showFrontier ? '0 8px 25px rgba(255, 152, 0, 0.4)' : '0 8px 25px rgba(102, 187, 106, 0.4)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!calculatingFrontier) {
-                    e.target.style.transform = 'scale(1)';
-                    e.target.style.boxShadow = showFrontier ? '0 6px 20px rgba(255, 152, 0, 0.3)' : '0 6px 20px rgba(102, 187, 106, 0.3)';
-                  }
+                    : (showFrontier ? '0 4px 15px rgba(255, 152, 0, 0.3)' : '0 4px 15px rgba(102, 187, 106, 0.3)'),
+                  transform: calculatingFrontier ? 'scale(0.98)' : 'scale(1)'
                 }}
               >
                 {calculatingFrontier && <Spinner size="small" />}
                 {calculatingFrontier ? (
-                  <>
-                    🔄 Calcolando frontiera...
-                  </>
+                  'Calcolando...'
                 ) : (
                   frontierData ? (
-                    showFrontier ? '👁️ Nascondi Analisi' : '📊 Mostra Analisi'
+                    showFrontier ? '👁️ Nascondi' : '📊 Mostra'
                   ) : (
-                    '🚀 Calcola Frontiera Efficiente'
+                    '🚀 Calcola Frontiera'
                   )
                 )}
               </Button>
               
               {calculatingFrontier && (
                 <div style={{
-                  position: 'absolute',
-                  bottom: -8,
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  fontSize: 11,
+                  fontSize: 10,
                   color: '#999',
-                  whiteSpace: 'nowrap'
+                  marginTop: 5
                 }}>
                   Analizzando ~5000 portafogli...
                 </div>

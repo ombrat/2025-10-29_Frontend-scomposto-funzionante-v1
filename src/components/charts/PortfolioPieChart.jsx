@@ -11,7 +11,6 @@ import { API_CONFIG } from '../../config/apiConfig.js';
 export default function PortfolioPieChart({ assets, title = "Composizione Portafoglio", size = 300 }) {
   const [hoveredSlice, setHoveredSlice] = useState(null);
   const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, data: null });
-  const [viewMode, setViewMode] = useState('assets'); // 'assets', 'currency' o 'geography'
   const [geoLoading, setGeoLoading] = useState(false);
   
   // Mapping delle valute basato sui ticker e borse di quotazione
@@ -93,9 +92,9 @@ export default function PortfolioPieChart({ assets, title = "Composizione Portaf
   // Cache per evitare richieste duplicate
   const [geoCache, setGeoCache] = useState({});
 
-  // Effetto per pre-caricare dati geografici quando serve
+  // Effetto per pre-caricare dati geografici
   useEffect(() => {
-    if (viewMode === 'geography' && assets && assets.length > 0) {
+    if (assets && assets.length > 0) {
       const loadGeographyData = async () => {
         setGeoLoading(true);
         try {
@@ -133,7 +132,7 @@ export default function PortfolioPieChart({ assets, title = "Composizione Portaf
 
       loadGeographyData();
     }
-  }, [viewMode, assets]);
+  }, [assets]);
 
   // Funzione per ottenere dati geografici da API esterna
   const fetchGeographyFromAPI = async (ticker) => {
@@ -444,166 +443,164 @@ export default function PortfolioPieChart({ assets, title = "Composizione Portaf
     }
   };
 
-  // Calcola i dati per il grafico a torta
-  const pieData = useMemo(() => {
-    if (!assets || !Array.isArray(assets)) return [];
+  // Calcola i dati per tutti e tre i grafici
+  const pieDataSets = useMemo(() => {
+    if (!assets || !Array.isArray(assets)) return { assets: [], currency: [], geography: [] };
     
     // Filtra solo gli asset con peso > 0
     const validAssets = assets.filter(asset => Number(asset.weight) > 0);
     
-    if (validAssets.length === 0) return [];
+    if (validAssets.length === 0) return { assets: [], currency: [], geography: [] };
     
-    // Genera colori per ogni categoria
+    // Palette moderna ed elegante con contrasto
     const colors = [
-      '#66bb6a', '#42a5f5', '#ff7043', '#ffca28', '#ab47bc', 
-      '#26c6da', '#66bb6a', '#8d6e63', '#78909c', '#ff8a65',
-      '#a1c181', '#ffd54f', '#81c784', '#64b5f6', '#f06292'
+      '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+      '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#6366f1',
+      '#14b8a6', '#eab308', '#f43f5e', '#a855f7', '#22d3ee',
+      '#65a30d', '#dc2626', '#7c3aed', '#059669', '#d97706'
     ];
     
-    if (viewMode === 'assets') {
-      // Modalità asset: visualizza ogni singolo asset
-      const totalWeight = validAssets.reduce((sum, asset) => sum + Number(asset.weight), 0);
-      let currentAngle = 0;
+    // 1. Dati per grafico Asset
+    const totalWeight = validAssets.reduce((sum, asset) => sum + Number(asset.weight), 0);
+    let currentAngle = 0;
+    
+    const assetsData = validAssets.map((asset, index) => {
+      const percentage = (Number(asset.weight) / totalWeight) * 100;
+      const angle = (percentage / 100) * 360;
+      const color = colors[index % colors.length];
       
-      return validAssets.map((asset, index) => {
-        const percentage = (Number(asset.weight) / totalWeight) * 100;
-        const angle = (percentage / 100) * 360;
-        const color = colors[index % colors.length];
-        
-        const startAngle = currentAngle;
-        const endAngle = currentAngle + angle;
-        currentAngle += angle;
-        
-        return {
-          ticker: asset.ticker,
-          name: asset.name || asset.ticker,
-          weight: Number(asset.weight),
-          percentage: percentage,
-          startAngle,
-          endAngle,
-          color,
-          currency: getCurrency(asset.ticker),
-          assets: [asset] // Per mostrare nel tooltip
-        };
-      });
-    } else if (viewMode === 'currency') {
-      // Modalità valuta: raggruppa per valuta
-      const currencyGroups = {};
+      const startAngle = currentAngle;
+      const endAngle = currentAngle + angle;
+      currentAngle += angle;
       
-      validAssets.forEach(asset => {
-        const currency = getCurrency(asset.ticker);
-        if (!currencyGroups[currency]) {
-          currencyGroups[currency] = {
-            currency,
-            totalWeight: 0,
-            assets: []
-          };
-        }
-        currencyGroups[currency].totalWeight += Number(asset.weight);
-        currencyGroups[currency].assets.push(asset);
-      });
-      
-      const totalWeight = Object.values(currencyGroups).reduce((sum, group) => sum + group.totalWeight, 0);
-      let currentAngle = 0;
-      
-      // Colori e nomi per le valute
-      const currencyInfo = {
-        'EUR': { name: 'Euro (€)', color: '#66bb6a' },       // Verde
-        'USD': { name: 'Dollaro USA ($)', color: '#42a5f5' }, // Blu
-        'GBP': { name: 'Sterlina (£)', color: '#ff9800' },    // Arancione
-        'CHF': { name: 'Franco Svizzero (CHF)', color: '#9c27b0' }, // Viola
-        'JPY': { name: 'Yen (¥)', color: '#f44336' },        // Rosso
-        'CAD': { name: 'Dollaro Canadese (C$)', color: '#4caf50' }, // Verde scuro
-        'AUD': { name: 'Dollaro Australiano (A$)', color: '#ff5722' }, // Arancione rosso
-        'SEK': { name: 'Corona Svedese (SEK)', color: '#795548' }, // Marrone
-        'NOK': { name: 'Corona Norvegese (NOK)', color: '#607d8b' }, // Blu-grigio
-        'DKK': { name: 'Corona Danese (DKK)', color: '#e91e63' }, // Rosa
-        'HKD': { name: 'Dollaro Hong Kong (HK$)', color: '#009688' }, // Teal
-        'SGD': { name: 'Dollaro Singapore (S$)', color: '#3f51b5' }, // Indigo
-        'KRW': { name: 'Won Coreano (₩)', color: '#cddc39' }, // Lime
-        'TWD': { name: 'Dollaro Taiwan (NT$)', color: '#ffc107' }, // Ambra
-        'CNY': { name: 'Yuan Cinese (¥)', color: '#8bc34a' }, // Verde chiaro
-        'INR': { name: 'Rupia Indiana (₹)', color: '#ff6f00' }, // Arancione scuro
-        'BRL': { name: 'Real Brasiliano (R$)', color: '#388e3c' }, // Verde
+      return {
+        ticker: asset.ticker,
+        name: asset.name || asset.ticker,
+        weight: Number(asset.weight),
+        percentage: percentage,
+        startAngle,
+        endAngle,
+        color,
+        currency: getCurrency(asset.ticker),
+        assets: [asset]
       };
+    });
+    
+    // 2. Dati per grafico Valuta
+    const currencyGroups = {};
+    
+    validAssets.forEach(asset => {
+      const currency = getCurrency(asset.ticker);
+      if (!currencyGroups[currency]) {
+        currencyGroups[currency] = {
+          currency,
+          totalWeight: 0,
+          assets: []
+        };
+      }
+      currencyGroups[currency].totalWeight += Number(asset.weight);
+      currencyGroups[currency].assets.push(asset);
+    });
+    
+    const currencyInfo = {
+      'EUR': { name: 'Euro', color: '#3b82f6' },        // Blu moderno
+      'USD': { name: 'Dollaro USA', color: '#10b981' },  // Verde smeraldo
+      'GBP': { name: 'Sterlina', color: '#f59e0b' },     // Ambra elegante
+      'CHF': { name: 'Franco Svizzero', color: '#ef4444' }, // Rosso vivace
+      'JPY': { name: 'Yen', color: '#8b5cf6' },          // Viola moderno
+      'CAD': { name: 'Dollaro Canadese', color: '#06b6d4' }, // Ciano
+      'AUD': { name: 'Dollaro Australiano', color: '#84cc16' }, // Verde lime
+      'SEK': { name: 'Corona Svedese', color: '#f97316' }, // Arancione
+      'NOK': { name: 'Corona Norvegese', color: '#ec4899' }, // Rosa magenta
+      'DKK': { name: 'Corona Danese', color: '#6366f1' },   // Indaco
+      'HKD': { name: 'Dollaro Hong Kong', color: '#14b8a6' }, // Teal
+      'SGD': { name: 'Dollaro Singapore', color: '#eab308' }, // Giallo
+      'KRW': { name: 'Won Coreano', color: '#f43f5e' },     // Rosa
+      'TWD': { name: 'Dollaro Taiwan', color: '#a855f7' },   // Viola chiaro
+      'CNY': { name: 'Yuan Cinese', color: '#22d3ee' },     // Ciano chiaro
+      'INR': { name: 'Rupia Indiana', color: '#65a30d' },   // Verde oliva
+      'BRL': { name: 'Real Brasiliano', color: '#dc2626' }, // Rosso scuro
+    };
 
-      return Object.values(currencyGroups).map((group, index) => {
-        const percentage = (group.totalWeight / totalWeight) * 100;
-        const angle = (percentage / 100) * 360;
-        const currInfo = currencyInfo[group.currency] || { name: group.currency, color: '#757575' };
-        
-        const startAngle = currentAngle;
-        const endAngle = currentAngle + angle;
-        currentAngle += angle;
-        
-        return {
-          ticker: group.currency,
-          name: currInfo.name,
-          weight: group.totalWeight,
-          percentage: percentage,
-          startAngle,
-          endAngle,
-          color: currInfo.color,
-          currency: group.currency,
-          assets: group.assets
-        };
-      });
-    } else {
-      // Modalità geografia: raggruppa per regione geografica
-      const geographyGroups = {};
+    currentAngle = 0;
+    const currencyData = Object.values(currencyGroups).map((group, index) => {
+      const percentage = (group.totalWeight / totalWeight) * 100;
+      const angle = (percentage / 100) * 360;
+      const currInfo = currencyInfo[group.currency] || { name: group.currency, color: '#757575' };
       
-      validAssets.forEach(asset => {
-        // Usa la cache o il fallback se non disponibile
-        const region = geoCache[asset.ticker] || getGeographyFallback(asset.ticker);
-        if (!geographyGroups[region]) {
-          geographyGroups[region] = {
-            region,
-            totalWeight: 0,
-            assets: []
-          };
-        }
-        geographyGroups[region].totalWeight += Number(asset.weight);
-        geographyGroups[region].assets.push(asset);
-      });
+      const startAngle = currentAngle;
+      const endAngle = currentAngle + angle;
+      currentAngle += angle;
       
-      // Colori per le regioni
-      const regionColors = {
-        'Nord America': '#1e88e5',        // Blu
-        'Europa': '#66bb6a',              // Verde
-        'Asia-Pacifico': '#ff9800',       // Arancione
-        'Mercati Emergenti': '#9c27b0',   // Viola
-        'Sud America': '#e91e63',         // Rosa/Magenta
-        'Africa': '#795548',              // Marrone
-        'Medio Oriente': '#607d8b',       // Blu-grigio
-        'Altri': '#757575'                // Grigio
+      return {
+        ticker: group.currency,
+        name: currInfo.name,
+        weight: group.totalWeight,
+        percentage: percentage,
+        startAngle,
+        endAngle,
+        color: currInfo.color,
+        currency: group.currency,
+        assets: group.assets
       };
-      
-      const totalWeight = Object.values(geographyGroups).reduce((sum, group) => sum + group.totalWeight, 0);
-      let currentAngle = 0;
-      
-      return Object.values(geographyGroups).map((group, index) => {
-        const percentage = (group.totalWeight / totalWeight) * 100;
-        const angle = (percentage / 100) * 360;
-        const color = regionColors[group.region] || '#757575';
-        
-        const startAngle = currentAngle;
-        const endAngle = currentAngle + angle;
-        currentAngle += angle;
-        
-        return {
-          ticker: group.region,
-          name: group.region,
-          weight: group.totalWeight,
-          percentage: percentage,
-          startAngle,
-          endAngle,
-          color,
-          region: group.region,
-          assets: group.assets
+    });
+    
+    // 3. Dati per grafico Geografia
+    const geographyGroups = {};
+    
+    validAssets.forEach(asset => {
+      const region = geoCache[asset.ticker] || getGeographyFallback(asset.ticker);
+      if (!geographyGroups[region]) {
+        geographyGroups[region] = {
+          region,
+          totalWeight: 0,
+          assets: []
         };
-      });
-    }
-  }, [assets, viewMode, geoCache]);
+      }
+      geographyGroups[region].totalWeight += Number(asset.weight);
+      geographyGroups[region].assets.push(asset);
+    });
+    
+    const regionColors = {
+      'Nord America': '#3b82f6',      // Blu principale - mercato dominante
+      'Europa': '#10b981',            // Verde smeraldo - stabilità
+      'Asia-Pacifico': '#f59e0b',     // Ambra - crescita dinamica
+      'Mercati Emergenti': '#ef4444', // Rosso - volatilità/opportunità
+      'Sud America': '#8b5cf6',       // Viola - diversificazione
+      'Africa': '#06b6d4',            // Ciano - potenziale
+      'Medio Oriente': '#f97316',     // Arancione - energia/risorse
+      'Altri': '#6b7280'              // Grigio neutro
+    };
+    
+    currentAngle = 0;
+    const geographyData = Object.values(geographyGroups).map((group, index) => {
+      const percentage = (group.totalWeight / totalWeight) * 100;
+      const angle = (percentage / 100) * 360;
+      const color = regionColors[group.region] || '#757575';
+      
+      const startAngle = currentAngle;
+      const endAngle = currentAngle + angle;
+      currentAngle += angle;
+      
+      return {
+        ticker: group.region,
+        name: group.region,
+        weight: group.totalWeight,
+        percentage: percentage,
+        startAngle,
+        endAngle,
+        color,
+        region: group.region,
+        assets: group.assets
+      };
+    });
+    
+    return {
+      assets: assetsData,
+      currency: currencyData,
+      geography: geographyData
+    };
+  }, [assets, geoCache]);
 
   // Gestione hover e click
   const handleSliceMouseEnter = (slice, event) => {
@@ -632,6 +629,174 @@ export default function PortfolioPieChart({ assets, title = "Composizione Portaf
     }
   };
 
+  // Funzione per renderizzare un singolo grafico completo
+  const renderSingleChart = (pieData, chartTitle, chartSize = 280) => {
+    if (!pieData || pieData.length === 0) {
+      return (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          minWidth: chartSize + 40
+        }}>
+          <h4 style={{
+            color: '#bdbdbd',
+            margin: '0 0 15px 0',
+            textAlign: 'center',
+            fontSize: 14,
+            fontWeight: 600,
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px'
+          }}>
+            {chartTitle}
+          </h4>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: chartSize,
+            background: 'rgba(0, 0, 0, 0.15)',
+            borderRadius: 8,
+            border: '1px solid rgba(255, 255, 255, 0.03)',
+            color: '#999'
+          }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 16, marginBottom: 8, color: '#6b7280' }}>Nessun dato disponibile</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const radius = (chartSize - 40) / 2;
+    const centerX = chartSize / 2;
+    const centerY = chartSize / 2;
+
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        minWidth: chartSize + 40
+      }}>
+        <h4 style={{
+          color: '#bdbdbd',
+          margin: '0 0 15px 0',
+          textAlign: 'center',
+          fontSize: 14,
+          fontWeight: 600,
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px'
+        }}>
+          {chartTitle}
+        </h4>
+        
+        <div style={{ position: 'relative' }}>
+          <svg width={chartSize} height={chartSize} style={{ display: 'block' }}>
+            {pieData.map((slice) => 
+              createPieSlice(slice, centerX, centerY, radius)
+            )}
+            
+            <circle
+              cx={centerX}
+              cy={centerY}
+              r={radius * 0.4}
+              fill="#1a1a1a"
+              stroke="rgba(59, 130, 246, 0.3)"
+              strokeWidth="1"
+            />
+            
+            <text
+              x={centerX}
+              y={centerY - 2}
+              textAnchor="middle"
+              fill="#3b82f6"
+              fontSize="11"
+              fontWeight="600"
+            >
+              {pieData.length}
+            </text>
+            <text
+              x={centerX}
+              y={centerY + 10}
+              textAnchor="middle"
+              fill="#6b7280"
+              fontSize="9"
+            >
+              {pieData.length === 1 ? 'elemento' : 'elementi'}
+            </text>
+          </svg>
+        </div>
+
+        {/* Legenda compatta */}
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 4,
+          marginTop: 15,
+          maxWidth: chartSize,
+          maxHeight: 150,
+          overflowY: 'auto'
+        }}>
+          {pieData.slice(0, 8).map((slice, index) => (
+            <div
+              key={slice.ticker}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '4px 8px',
+                background: 'rgba(0, 0, 0, 0.15)',
+                borderRadius: 6,
+                fontSize: 11,
+                border: '1px solid rgba(255, 255, 255, 0.03)'
+              }}
+            >
+              <div
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: '50%',
+                  backgroundColor: slice.color,
+                  flexShrink: 0
+                }}
+              />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{
+                  color: '#e6e6e6',
+                  fontWeight: 600,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  fontSize: 11
+                }}>
+                  {slice.ticker}
+                </div>
+              </div>
+              <div style={{
+                color: slice.color,
+                fontSize: 11,
+                fontWeight: 600
+              }}>
+                {slice.percentage.toFixed(1)}%
+              </div>
+            </div>
+          ))}
+          {pieData.length > 8 && (
+            <div style={{
+              textAlign: 'center',
+              color: '#6b7280',
+              fontSize: 10,
+              padding: '4px'
+            }}>
+              + {pieData.length - 8} altri
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   // Funzione per creare il path SVG per ogni settore
   const createPieSlice = (slice, centerX, centerY, radius) => {
     const { startAngle, endAngle, color, ticker } = slice;
@@ -649,7 +814,7 @@ export default function PortfolioPieChart({ assets, title = "Composizione Portaf
           cy={centerY}
           r={currentRadius}
           fill={color}
-          stroke={isHovered ? '#fff' : '#1a1a1a'}
+          stroke={isHovered ? '#f8fafc' : 'rgba(0, 0, 0, 0.2)'}
           strokeWidth={isHovered ? 2 : 1}
           style={{
             transition: 'all 0.3s ease',
@@ -686,7 +851,7 @@ export default function PortfolioPieChart({ assets, title = "Composizione Portaf
         key={ticker}
         d={pathData}
         fill={color}
-        stroke={isHovered ? '#fff' : '#1a1a1a'}
+        stroke={isHovered ? '#f8fafc' : 'rgba(0, 0, 0, 0.2)'}
         strokeWidth={isHovered ? 2 : 1}
         style={{
           transition: 'all 0.3s ease',
@@ -701,7 +866,7 @@ export default function PortfolioPieChart({ assets, title = "Composizione Portaf
     );
   };
 
-  if (!pieData || pieData.length === 0) {
+  if (!pieDataSets || (pieDataSets.assets.length === 0 && pieDataSets.currency.length === 0 && pieDataSets.geography.length === 0)) {
     return (
       <div style={{
         display: 'flex',
@@ -714,252 +879,80 @@ export default function PortfolioPieChart({ assets, title = "Composizione Portaf
         color: '#999'
       }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 48, marginBottom: 10 }}>📊</div>
-          <div>Nessun dato disponibile</div>
+          <div style={{ fontSize: 16, color: '#6b7280' }}>Nessun dato disponibile</div>
         </div>
       </div>
     );
   }
 
-  const radius = (size - 40) / 2;
-  const centerX = size / 2;
-  const centerY = size / 2;
-
   return (
     <div style={{
-      background: 'linear-gradient(135deg, rgba(30, 136, 229, 0.05) 0%, rgba(30, 136, 229, 0.1) 100%)',
-      border: '2px solid rgba(30, 136, 229, 0.3)',
-      borderRadius: 12,
-      padding: 20,
+      padding: 0,
       animation: 'fadeIn 0.6s ease-out'
     }}>
       <h3 style={{
-        color: '#fff',
-        margin: '0 0 15px 0',
+        color: '#bdbdbd',
+        margin: '0 0 25px 0',
         textAlign: 'center',
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: 600,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '8px'
+        textTransform: 'uppercase',
+        letterSpacing: '0.5px'
       }}>
-        🥧 {title}
+        {title}
       </h3>
       
-      {/* Pulsanti per switchare modalità */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        gap: '8px',
-        marginBottom: '20px'
-      }}>
-        <button
-          onClick={() => setViewMode('assets')}
-          style={{
-            padding: '6px 12px',
-            borderRadius: '6px',
-            border: 'none',
-            background: viewMode === 'assets' ? '#66bb6a' : 'rgba(255, 255, 255, 0.1)',
-            color: viewMode === 'assets' ? '#fff' : '#ccc',
-            fontSize: '12px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease'
-          }}
-        >
-          📊 Per Asset
-        </button>
-        <button
-          onClick={() => setViewMode('currency')}
-          style={{
-            padding: '6px 12px',
-            borderRadius: '6px',
-            border: 'none',
-            background: viewMode === 'currency' ? '#66bb6a' : 'rgba(255, 255, 255, 0.1)',
-            color: viewMode === 'currency' ? '#fff' : '#ccc',
-            fontSize: '12px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease'
-          }}
-        >
-          💱 Per Valuta
-        </button>
-        <button
-          onClick={() => setViewMode('geography')}
-          disabled={geoLoading}
-          style={{
-            padding: '6px 12px',
-            borderRadius: '6px',
-            border: 'none',
-            background: viewMode === 'geography' ? '#66bb6a' : 'rgba(255, 255, 255, 0.1)',
-            color: viewMode === 'geography' ? '#fff' : '#ccc',
-            fontSize: '12px',
-            fontWeight: '600',
-            cursor: geoLoading ? 'not-allowed' : 'pointer',
-            transition: 'all 0.2s ease',
-            opacity: geoLoading ? 0.6 : 1
-          }}
-        >
-          {geoLoading ? '⏳ Caricamento...' : '🌍 Per Geografia'}
-        </button>
-      </div>
-      
+      {/* Contenitore per tutti e tre i grafici */}
       <div style={{
         display: 'flex',
         alignItems: 'flex-start',
-        gap: 30,
+        gap: 40,
         justifyContent: 'center',
         flexWrap: 'wrap'
       }}>
-        {/* Grafico SVG */}
-        <div style={{ position: 'relative' }}>
-          <svg width={size} height={size} style={{ display: 'block' }}>
-            {pieData.map((slice) => 
-              createPieSlice(slice, centerX, centerY, radius)
-            )}
-            
-            {/* Cerchio centrale per effetto donut */}
-            <circle
-              cx={centerX}
-              cy={centerY}
-              r={radius * 0.4}
-              fill="#1a1a1a"
-              stroke="rgba(102, 187, 106, 0.3)"
-              strokeWidth="2"
-            />
-            
-            {/* Testo centrale */}
-            <text
-              x={centerX}
-              y={centerY - 5}
-              textAnchor="middle"
-              fill="#66bb6a"
-              fontSize="14"
-              fontWeight="600"
-            >
-              Portfolio
-            </text>
-            <text
-              x={centerX}
-              y={centerY + 12}
-              textAnchor="middle"
-              fill="#999"
-              fontSize="12"
-            >
-              {pieData.length} asset{pieData.length !== 1 ? 's' : ''}
-            </text>
-          </svg>
-        </div>
-
-        {/* Legenda */}
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 8,
-          minWidth: 200
-        }}>
-          <div style={{
-            color: '#bdbdbd',
-            fontSize: 14,
-            fontWeight: 600,
-            marginBottom: 8,
-            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-            paddingBottom: 8
-          }}>
-            Allocazione
-          </div>
-          
-          {pieData.map((slice, index) => {
-            const isHovered = hoveredSlice === slice.ticker;
-            
-            return (
-            <div
-              key={slice.ticker}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-                padding: '8px 12px',
-                background: isHovered ? `${slice.color}15` : 'rgba(0, 0, 0, 0.2)',
-                borderRadius: 8,
-                border: `1px solid ${slice.color}30`,
-                transition: 'all 0.3s ease',
-                cursor: 'pointer',
-                transform: isHovered ? 'translateX(4px)' : 'translateX(0)'
-              }}
-              onMouseEnter={(e) => {
-                setHoveredSlice(slice.ticker);
-              }}
-              onMouseLeave={(e) => {
-                setHoveredSlice(null);
-              }}
-            >
-              <div
-                style={{
-                  width: 16,
-                  height: 16,
-                  borderRadius: '50%',
-                  backgroundColor: slice.color,
-                  flexShrink: 0,
-                  border: '2px solid #1a1a1a'
-                }}
-              />
-              
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{
-                  color: '#fff',
-                  fontSize: 14,
-                  fontWeight: 600,
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}>
-                  {slice.ticker}
-                </div>
-                <div style={{
-                  color: '#999',
-                  fontSize: 12,
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}>
-                  {slice.name}
-                </div>
-              </div>
-              
-              <div style={{
-                color: slice.color,
-                fontSize: 16,
-                fontWeight: 700,
-                textAlign: 'right'
-              }}>
-                {slice.percentage.toFixed(1)}%
-              </div>
-            </div>
-          );
-          })}
-          
-          {/* Totale */}
+        {/* Grafico Per Asset */}
+        {renderSingleChart(pieDataSets.assets, 'Per Asset', 340)}
+        
+        {/* Grafico Per Valuta */}
+        {renderSingleChart(pieDataSets.currency, 'Per Valuta', 340)}
+        
+        {/* Grafico Per Geografia */}
+        {geoLoading ? (
           <div style={{
             display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '12px',
-            background: 'rgba(102, 187, 106, 0.1)',
-            borderRadius: 8,
-            border: '1px solid rgba(102, 187, 106, 0.3)',
-            marginTop: 8
+            minWidth: 380
           }}>
-            <span style={{ color: '#66bb6a', fontWeight: 600 }}>
-              Totale
-            </span>
-            <span style={{ color: '#66bb6a', fontWeight: 700, fontSize: 16 }}>
-              100.0%
-            </span>
+            <h4 style={{
+              color: '#bdbdbd',
+              margin: '0 0 15px 0',
+              textAlign: 'center',
+              fontSize: 14,
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}>
+              Per Geografia
+            </h4>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: 280,
+              background: 'rgba(0, 0, 0, 0.15)',
+              borderRadius: 8,
+              border: '1px solid rgba(255, 255, 255, 0.03)',
+              color: '#999'
+            }}>
+              <div style={{ textAlign: 'center', color: '#6b7280', fontSize: 14 }}>
+                Caricamento dati geografici...
+              </div>
+            </div>
           </div>
-        </div>
+        ) : (
+          renderSingleChart(pieDataSets.geography, 'Per Geografia', 340)
+        )}
       </div>
 
       {/* Tooltip */}
@@ -970,45 +963,46 @@ export default function PortfolioPieChart({ assets, title = "Composizione Portaf
             left: tooltip.x + 10,
             top: tooltip.y - 60,
             background: 'rgba(0, 0, 0, 0.9)',
-            color: '#fff',
-            padding: '12px 16px',
-            borderRadius: 8,
-            fontSize: 14,
-            border: `2px solid ${tooltip.data.color}`,
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+            color: '#e6e6e6',
+            padding: '8px 12px',
+            borderRadius: 6,
+            fontSize: 12,
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
             zIndex: 1000,
             pointerEvents: 'none',
-            minWidth: 180
+            minWidth: 150
           }}
         >
-          <div style={{ fontWeight: 'bold', marginBottom: 6, color: tooltip.data.color }}>
+          <div style={{ fontWeight: 600, marginBottom: 4, color: tooltip.data.color }}>
             {tooltip.data.ticker}
           </div>
-          <div style={{ fontSize: 12, color: '#ccc', marginBottom: 8 }}>
+          <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 6 }}>
             {tooltip.data.name}
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>Peso:</span>
-            <span style={{ fontWeight: 'bold', color: tooltip.data.color }}>
+            <span style={{ fontSize: 11 }}>Peso:</span>
+            <span style={{ fontWeight: 600, color: tooltip.data.color, fontSize: 11 }}>
               {tooltip.data.percentage.toFixed(1)}%
             </span>
           </div>
           
-          {/* Mostra asset inclusi nella modalità valuta */}
-          {viewMode === 'currency' && tooltip.data.assets && tooltip.data.assets.length > 1 && (
-            <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #333' }}>
-              <div style={{ fontSize: 11, color: '#999', marginBottom: 4 }}>Asset inclusi:</div>
-              {tooltip.data.assets.map((asset, index) => (
-                <div key={index} style={{ fontSize: 11, color: '#ccc' }}>
-                  • {asset.ticker} ({((asset.weight / tooltip.data.weight) * 100).toFixed(1)}%)
+          {/* Mostra asset inclusi per valuta e geografia */}
+          {tooltip.data.assets && tooltip.data.assets.length > 1 && (
+            <div style={{ marginTop: 6, paddingTop: 6, borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+              <div style={{ fontSize: 10, color: '#6b7280', marginBottom: 3 }}>Asset inclusi:</div>
+              {tooltip.data.assets.slice(0, 3).map((asset, index) => (
+                <div key={index} style={{ fontSize: 10, color: '#9ca3af' }}>
+                  {asset.ticker} ({((asset.weight / tooltip.data.weight) * 100).toFixed(1)}%)
                 </div>
               ))}
+              {tooltip.data.assets.length > 3 && (
+                <div style={{ fontSize: 10, color: '#6b7280', marginTop: 2 }}>
+                  +{tooltip.data.assets.length - 3} altri
+                </div>
+              )}
             </div>
           )}
-          
-          <div style={{ fontSize: 11, color: '#999', marginTop: 4 }}>
-            Clicca per selezionare
-          </div>
         </div>
       )}
     </div>

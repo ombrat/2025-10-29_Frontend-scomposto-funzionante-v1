@@ -19,6 +19,49 @@ export default function PortfolioChart({ data, title, onHover = null, hoverIndex
   const [overlayData, setOverlayData] = useState(null); // Dati asset/indicatore da sovrapporre
   const [overlayInfo, setOverlayInfo] = useState(null); // Info su cosa stiamo visualizzando
   
+  // Stati per zoom e pan
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [panOffset, setPanOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, offset: 0 });
+  
+  // Range visibile (inizio e fine come percentuale da 0 a 1)
+  const [visibleRange, setVisibleRange] = useState({ start: 0, end: 1 });
+  
+  // Stati per il tool di misurazione
+  const [measurementMode, setMeasurementMode] = useState(false);
+  const [measurementStart, setMeasurementStart] = useState(null); // { x, y, value, date }
+  const [measurementCurrent, setMeasurementCurrent] = useState(null); // { x, y, value, date }
+  const [measurementLocked, setMeasurementLocked] = useState(false); // true = misurazione bloccata (2° click)
+  
+  const chartContainerRef = useRef(null);
+  
+  // Gestione evento wheel nativo per prevenire scroll della pagina
+  useEffect(() => {
+    const container = chartContainerRef.current;
+    if (!container) return;
+    
+    const handleWheel = (e) => {
+      e.preventDefault();
+      const rect = container.getBoundingClientRect();
+      const mouseX = (e.clientX - rect.left) / rect.width;
+      
+      const currentRange = visibleRange.end - visibleRange.start;
+      const zoomFactor = e.deltaY > 0 ? 1.15 : 0.85;
+      const newRange = Math.min(1, Math.max(0.05, currentRange * zoomFactor));
+      
+      // Zoom verso la posizione del mouse
+      const mousePosition = visibleRange.start + currentRange * mouseX;
+      const newStart = Math.max(0, Math.min(1 - newRange, mousePosition - newRange * mouseX));
+      const newEnd = newStart + newRange;
+      
+      setVisibleRange({ start: newStart, end: newEnd });
+    };
+    
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    return () => container.removeEventListener('wheel', handleWheel);
+  }, [visibleRange]);
+  
   // Effettua la ricerca quando cambia il termine
   useEffect(() => {
     const performSearch = async () => {
@@ -100,8 +143,17 @@ export default function PortfolioChart({ data, title, onHover = null, hoverIndex
         }
         
         // Simula lo stesso investimento del portfolio
-        // Prendi il capitale iniziale del portfolio
-        const portfolioInitialValue = chartDataRaw[0].Value;
+        // Trova il primo punto dove il portfolio ha un valore > 0 (dopo l'investimento)
+        const firstInvestedIndex = chartDataRaw.findIndex(d => {
+          const investedVal = Number(d.TotalInvested ?? d.Total_invested ?? d.totalInvested ?? 0);
+          const valueVal = Number(d.Value ?? d.value ?? 0);
+          return investedVal > 0 || valueVal > 0;
+        });
+        
+        const portfolioInitialValue = firstInvestedIndex >= 0 
+          ? chartDataRaw[firstInvestedIndex].Value 
+          : chartDataRaw[0].Value;
+        
         const assetFirstPrice = chartData[0].Value;
         
         console.log('💰 Portfolio iniziale:', portfolioInitialValue);
@@ -162,28 +214,28 @@ export default function PortfolioChart({ data, title, onHover = null, hoverIndex
       const data = await backendService.getSeriesHistory(indicator.id, years);
       
       if (data && data.observations && data.observations.length > 0) {
-        // Filtra per date range
+        // Filtra per date range - ma sii più permissivo con la data finale
         const observations = data.observations.filter(obs => {
           const obsDate = new Date(obs.date);
-          return obsDate >= startDate && obsDate <= endDate;
+          return obsDate >= startDate; // Non filtrare per endDate, prendi tutto dal startDate in poi
         });
         
         if (observations.length === 0) {
           throw new Error('Nessun dato disponibile nel periodo selezionato');
         }
         
-        // Per gli indicatori, normalizziamo al valore iniziale del portfolio
-        // in modo che partano dallo stesso punto e mostrino la variazione relativa
-        const portfolioInitialValue = chartDataRaw[0].Value;
-        const indicatorFirstValue = parseFloat(observations[0].value);
+        console.log(`📊 Indicatore caricato: ${observations.length} osservazioni`);
+        console.log(`📅 Prima data: ${observations[0].date}, Ultima data: ${observations[observations.length - 1].date}`);
+        console.log(`📅 Range portfolio: ${startDate.toISOString().split('T')[0]} - ${endDate.toISOString().split('T')[0]}`);
         
-        const normalizedObservations = observations.map(obs => ({
+        // Per gli indicatori FRED, manteniamo i valori originali
+        // La normalizzazione visiva verrà fatta nel rendering con un asse Y separato
+        const indicatorObservations = observations.map(obs => ({
           date: obs.date,
-          // Scala l'indicatore proporzionalmente: (valore / valore_iniziale) * capitale_iniziale_portfolio
-          value: (parseFloat(obs.value) / indicatorFirstValue) * portfolioInitialValue  // NON usare toFixed
+          value: parseFloat(obs.value) // Valore originale dell'indicatore
         }));
         
-        setOverlayData(normalizedObservations);
+        setOverlayData(indicatorObservations);
         setOverlayInfo({ 
           type: 'indicator', 
           name: indicator.title, 
@@ -215,12 +267,26 @@ export default function PortfolioChart({ data, title, onHover = null, hoverIndex
   const trimmedRaw = chartDataRaw.slice(startIdx);
   const chartData = sampleEvenIndices(trimmedRaw, MAX_DISPLAY_POINTS);
 
-  const values = chartData.map(d => Number(d.Value ?? d.value ?? 0));
-  const invested = chartData.map(d => Number(d.TotalInvested ?? d.Total_invested ?? d.totalInvested ?? 0));
-  const dates = chartData.map(d => new Date(d.Date));
+  // Applica il range visibile ai dati
+  const startIndex = Math.floor(chartData.length * visibleRange.start);
+  const endIndex = Math.ceil(chartData.length * visibleRange.end);
+  const visibleChartData = chartData.slice(startIndex, endIndex);
 
-  const minYRaw = Math.min(...values, ...invested);
-  const maxYRaw = Math.max(...values, ...invested);
+  const values = visibleChartData.map(d => Number(d.Value ?? d.value ?? 0));
+  const invested = visibleChartData.map(d => Number(d.TotalInvested ?? d.Total_invested ?? d.totalInvested ?? 0));
+  const dates = visibleChartData.map(d => new Date(d.Date));
+
+  // Calcola min/max per il portfolio (asse sinistro)
+  let minYRaw = Math.min(...values, ...invested);
+  let maxYRaw = Math.max(...values, ...invested);
+  
+  // Per gli ASSET aggiungiamo i valori all'asse principale
+  if (overlayData && overlayData.length > 0 && overlayInfo?.type === 'asset') {
+    const overlayValues = overlayData.map(d => typeof d.value === 'number' ? d.value : parseFloat(d.value));
+    minYRaw = Math.min(minYRaw, ...overlayValues);
+    maxYRaw = Math.max(maxYRaw, ...overlayValues);
+  }
+  
   const minY = isFinite(minYRaw) ? minYRaw : 0;
   const maxY = isFinite(maxYRaw) ? maxYRaw : minY + 1;
 
@@ -238,12 +304,48 @@ export default function PortfolioChart({ data, title, onHover = null, hoverIndex
   const maxYLabelWidth = Math.max(...yLabelStrings.map(s => estimateTextWidth(s, 12)));
   const leftGutter = Math.max(56, maxYLabelWidth + 20);
 
-  const innerWidth = WIDTH - leftGutter - RIGHT_MARGIN;
+  // Per gli indicatori FRED, calcoliamo un asse Y separato (asse destro)
+  let overlayMinY = 0;
+  let overlayMaxY = 1;
+  let overlayYTicks = [];
+  let hasIndicatorOverlay = false;
+  
+  if (overlayData && overlayData.length > 0 && overlayInfo?.type === 'indicator') {
+    hasIndicatorOverlay = true;
+    const overlayValues = overlayData.map(d => typeof d.value === 'number' ? d.value : parseFloat(d.value));
+    overlayMinY = Math.min(...overlayValues);
+    overlayMaxY = Math.max(...overlayValues);
+    
+    // Assicurati che ci sia un range valido
+    if (overlayMinY === overlayMaxY) {
+      overlayMinY = overlayMinY * 0.95;
+      overlayMaxY = overlayMaxY * 1.05;
+    }
+    
+    const overlayYTickValues = niceTicks(overlayMinY, overlayMaxY, desiredYTicks);
+    overlayYTicks = overlayYTickValues.length >= 5 ? overlayYTickValues : (() => {
+      const ticks = [];
+      for (let i = 0; i < desiredYTicks; i++) {
+        ticks.push(Math.round((overlayMinY + (i / (desiredYTicks - 1)) * (overlayMaxY - overlayMinY)) * 100) / 100);
+      }
+      return ticks;
+    })();
+  }
+
+  const RIGHT_MARGIN_DYNAMIC = hasIndicatorOverlay ? 90 : RIGHT_MARGIN;
+  const innerWidth = WIDTH - leftGutter - RIGHT_MARGIN_DYNAMIC;
   const innerHeight = HEIGHT - TOP_MARGIN - BOTTOM_MARGIN;
 
   const getX = (index) => leftGutter + index * (innerWidth) / Math.max(1, (values.length - 1));
   const getY = (value) => {
     const normalized = (value - minY) / (maxY - minY || 1);
+    return TOP_MARGIN + (1 - normalized) * innerHeight;
+  };
+  
+  // Funzione di mappatura per gli indicatori: mappa i valori originali nello spazio visivo
+  const getOverlayY = (value) => {
+    if (!hasIndicatorOverlay) return getY(value);
+    const normalized = (value - overlayMinY) / (overlayMaxY - overlayMinY || 1);
     return TOP_MARGIN + (1 - normalized) * innerHeight;
   };
 
@@ -323,24 +425,41 @@ export default function PortfolioChart({ data, title, onHover = null, hoverIndex
       return d.toISOString().split('T')[0];
     };
     
-    // Crea una mappa data normalizzata -> valore per l'overlay
-    const overlayMap = new Map(
-      overlayData.map(d => [normalizeDateString(d.date), typeof d.value === 'number' ? d.value : parseFloat(d.value)])
-    );
+    // Per gli indicatori, usa un approccio diverso: mappa ogni punto overlay alla sua posizione temporale nel grafico
+    const portfolioStartTime = dates[0].getTime();
+    const portfolioEndTime = dates[dates.length - 1].getTime();
+    const portfolioTimeRange = portfolioEndTime - portfolioStartTime;
     
-    console.log('🗺️ Prima data overlay normalizzata:', Array.from(overlayMap.keys())[0]);
-    console.log('🗺️ Prima data portfolio normalizzata:', normalizeDateString(dates[0]));
+    console.log('🗺️ Prima data overlay:', overlayData[0].date);
+    console.log('🗺️ Ultima data overlay:', overlayData[overlayData.length - 1].date);
+    console.log('🗺️ Prima data portfolio:', normalizeDateString(dates[0]));
+    console.log('🗺️ Ultima data portfolio:', normalizeDateString(dates[dates.length - 1]));
     
-    // Mappa i valori dell'overlay agli indici del portfolio
-    const overlayPoints = [];
-    dates.forEach((date, index) => {
-      const normalizedDate = normalizeDateString(date);
-      if (overlayMap.has(normalizedDate)) {
-        overlayPoints.push({ index, value: overlayMap.get(normalizedDate) });
-      }
-    });
+    // Mappa ogni punto dell'overlay alla sua posizione proporzionale nel grafico
+    const overlayPoints = overlayData
+      .map(d => {
+        const overlayDate = new Date(d.date);
+        const overlayTime = overlayDate.getTime();
+        
+        // Calcola la posizione proporzionale nel range temporale del portfolio
+        const timeProgress = (overlayTime - portfolioStartTime) / portfolioTimeRange;
+        
+        // Skippa punti fuori dal range
+        if (timeProgress < 0 || timeProgress > 1) return null;
+        
+        // Calcola l'indice "virtuale" come float
+        const virtualIndex = timeProgress * (values.length - 1);
+        
+        return {
+          virtualIndex,
+          value: typeof d.value === 'number' ? d.value : parseFloat(d.value),
+          date: d.date
+        };
+      })
+      .filter(p => p !== null);
 
-    console.log('🎯 Punti overlay matchati:', overlayPoints.length);
+    console.log('🎯 Punti overlay nel range:', overlayPoints.length);
+    console.log('📊 Tipo overlay:', overlayInfo?.type);
     
     // Se abbiamo punti, calcola il path
     if (overlayPoints.length > 0) {
@@ -349,14 +468,16 @@ export default function PortfolioChart({ data, title, onHover = null, hoverIndex
       console.log('📈 Range valori portfolio:', Math.min(...values), '-', Math.max(...values));
       
       overlayPath = overlayPoints.map((point, i) => {
-        const x = getX(point.index);
-        const y = getY(point.value);
+        // Usa l'indice virtuale per il posizionamento X
+        const x = leftGutter + point.virtualIndex * (innerWidth) / Math.max(1, (values.length - 1));
+        // Usa getOverlayY per indicatori (scala separata), getY per asset (stessa scala)
+        const y = hasIndicatorOverlay ? getOverlayY(point.value) : getY(point.value);
         return `${i === 0 ? 'M' : 'L'} ${x},${y}`;
       }).join(' ');
       
       console.log('🎨 Overlay path generato:', overlayPath.substring(0, 100) + '...');
     } else {
-      console.warn('⚠️ Nessun punto overlay matchato con le date del portfolio');
+      console.warn('⚠️ Nessun punto overlay nel range del portfolio');
     }
   }
 
@@ -463,21 +584,251 @@ export default function PortfolioChart({ data, title, onHover = null, hoverIndex
 
       <div style={{ width: '100%', display: 'flex', gap: '16px', position: 'relative' }}>
         {/* Grafico principale */}
-        <div style={{ flex: 1, display: 'block', position: 'relative' }}>
-          <svg ref={svgRef} viewBox={`0 0 ${WIDTH} ${HEIGHT}`} style={{ width: '100%', height: `${HEIGHT}px`, display: 'block', margin: '0 auto' }} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
-            {yTicks.map((v, i) => (<line key={i} x1={leftGutter} x2={WIDTH - RIGHT_MARGIN} y1={getY(v)} y2={getY(v)} stroke="#2d2d2d" strokeDasharray="3 3" />))}
+        <div 
+          ref={chartContainerRef}
+          style={{ flex: 1, display: 'block', position: 'relative' }}
+        >
+          <svg 
+            ref={svgRef} 
+            viewBox={`${-panOffset / zoomLevel} 0 ${WIDTH / zoomLevel} ${HEIGHT}`} 
+            style={{ 
+              width: '100%', 
+              height: `${HEIGHT}px`, 
+              display: 'block', 
+              margin: '0 auto',
+              cursor: measurementMode ? 'crosshair' : (isDragging ? 'grabbing' : 'grab'),
+              transition: isDragging ? 'none' : 'viewBox 0.2s ease'
+            }} 
+            onMouseMove={(e) => {
+              handleMouseMove(e);
+              
+              // Aggiorna il punto corrente in modalità misurazione (solo se non è bloccata)
+              if (measurementMode && !measurementLocked) {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const svgX = ((e.clientX - rect.left) / rect.width) * WIDTH;
+                
+                // Trova il punto più vicino sui dati visibili
+                const relativeX = (svgX - leftGutter) / (WIDTH - leftGutter - RIGHT_MARGIN_DYNAMIC);
+                const dataIndex = Math.max(0, Math.min(values.length - 1, Math.round(relativeX * (values.length - 1))));
+                
+                if (dataIndex >= 0 && dataIndex < values.length) {
+                  setMeasurementCurrent({
+                    x: getX(dataIndex),
+                    y: getY(values[dataIndex]),
+                    value: values[dataIndex],
+                    date: dates[dataIndex]
+                  });
+                }
+              }
+            }}
+            onMouseLeave={(e) => {
+              handleMouseLeave(e);
+              if (measurementMode && !measurementStart) {
+                setMeasurementCurrent(null);
+              }
+            }}
+            onClick={(e) => {
+              if (measurementMode) {
+                e.stopPropagation();
+                
+                // STATO 1: Nessun punto selezionato -> Imposta il primo punto
+                if (!measurementStart) {
+                  console.log('📊 Click 1: Setting START point');
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const svgX = ((e.clientX - rect.left) / rect.width) * WIDTH;
+                  
+                  const relativeX = (svgX - leftGutter) / (WIDTH - leftGutter - RIGHT_MARGIN_DYNAMIC);
+                  const dataIndex = Math.max(0, Math.min(values.length - 1, Math.round(relativeX * (values.length - 1))));
+                  
+                  if (dataIndex >= 0 && dataIndex < values.length) {
+                    const clickPoint = {
+                      x: getX(dataIndex),
+                      y: getY(values[dataIndex]),
+                      value: values[dataIndex],
+                      date: dates[dataIndex]
+                    };
+                    setMeasurementStart(clickPoint);
+                  }
+                }
+                // STATO 2: Primo punto selezionato ma non bloccato -> Blocca la misurazione
+                else if (!measurementLocked) {
+                  console.log('📊 Click 2: LOCKING measurement');
+                  setMeasurementLocked(true);
+                }
+                // STATO 3: Misurazione bloccata -> Reset completo e disattiva tool
+                else {
+                  console.log('� Click 3: RESET and deactivate tool');
+                  setMeasurementStart(null);
+                  setMeasurementCurrent(null);
+                  setMeasurementLocked(false);
+                  setMeasurementMode(false);
+                }
+              }
+            }}
+            onMouseDown={(e) => {
+              if (!measurementMode) {
+                setIsDragging(true);
+                setDragStart({ x: e.clientX, offset: visibleRange.start });
+                e.preventDefault();
+              }
+            }}
+            onMouseUp={() => {
+              if (!measurementMode) {
+                setIsDragging(false);
+              }
+            }}
+            onMouseMoveCapture={(e) => {
+              if (isDragging && !measurementMode) {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const dx = (e.clientX - dragStart.x) / rect.width;
+                const currentRange = visibleRange.end - visibleRange.start;
+                const newStart = Math.max(0, Math.min(1 - currentRange, dragStart.offset - dx));
+                setVisibleRange({
+                  start: newStart,
+                  end: newStart + currentRange
+                });
+              }
+            }}
+          >
+            {yTicks.map((v, i) => (<line key={i} x1={leftGutter} x2={WIDTH - RIGHT_MARGIN_DYNAMIC} y1={getY(v)} y2={getY(v)} stroke="#2d2d2d" strokeDasharray="3 3" />))}
             <path d={portfolioPath} fill="none" stroke={highlightColor} strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
             {showInvested && <path d={investedPath} fill="none" stroke="#ffb300" strokeDasharray="5 5" strokeWidth="2.5" />}
             {overlayPath && <path d={overlayPath} fill="none" stroke="#66bb6a" strokeWidth="2.5" strokeDasharray="3 3" opacity="0.85" />}
             {yTicks.map((labelValue, i) => (<text key={i} x={leftGutter - 12} y={getY(labelValue) + 5} textAnchor="end" fontSize="12" fill="#999">{formatMoney(labelValue)}</text>))}
+            {hasIndicatorOverlay && overlayYTicks.map((labelValue, i) => (
+              <text key={`overlay-y-${i}`} x={WIDTH - RIGHT_MARGIN_DYNAMIC + 12} y={getOverlayY(labelValue) + 5} textAnchor="start" fontSize="11" fill="#66bb6a">
+                {labelValue.toFixed(2)}
+              </text>
+            ))}
             {Array.from(new Set([0, Math.floor((values.length - 1) * 0.25), Math.floor((values.length - 1) * 0.5), Math.floor((values.length - 1) * 0.75), values.length - 1])).map((idx) => (
               <text key={idx} x={getX(idx)} y={HEIGHT - BOTTOM_MARGIN + 22} textAnchor="middle" fontSize="12" fill="#999">{formatDate(dates[idx])}</text>
             ))}
             <line x1={leftGutter} x2={leftGutter} y1={TOP_MARGIN - 6} y2={HEIGHT - BOTTOM_MARGIN} stroke="#444" />
+            {hasIndicatorOverlay && <line x1={WIDTH - RIGHT_MARGIN_DYNAMIC} x2={WIDTH - RIGHT_MARGIN_DYNAMIC} y1={TOP_MARGIN - 6} y2={HEIGHT - BOTTOM_MARGIN} stroke="#66bb6a" opacity="0.4" />}
             {typeof activeIndex === 'number' && activeIndex >= 0 && activeIndex < values.length && (
               <>
                 <line x1={getX(activeIndex)} x2={getX(activeIndex)} y1={TOP_MARGIN} y2={HEIGHT - BOTTOM_MARGIN} stroke={highlightColor} strokeWidth="1" strokeDasharray="4 4" opacity="0.9" />
                 <circle cx={getX(activeIndex)} cy={getY(values[activeIndex])} r="5" fill={highlightColor} stroke="#fff" strokeWidth="1.4" />
+              </>
+            )}
+            
+            {/* Measurement Tool */}
+            {measurementMode && measurementStart && measurementCurrent && (
+              <>
+                {/* Linee del crosshair */}
+                <line 
+                  x1={measurementStart.x} 
+                  y1={TOP_MARGIN} 
+                  x2={measurementStart.x} 
+                  y2={HEIGHT - BOTTOM_MARGIN} 
+                  stroke="#1e88e5" 
+                  strokeWidth="1.5" 
+                  strokeDasharray="4 4"
+                  opacity="0.8"
+                />
+                <line 
+                  x1={leftGutter} 
+                  y1={measurementStart.y} 
+                  x2={WIDTH - RIGHT_MARGIN_DYNAMIC} 
+                  y2={measurementStart.y} 
+                  stroke="#1e88e5" 
+                  strokeWidth="1.5" 
+                  strokeDasharray="4 4"
+                  opacity="0.8"
+                />
+                <line 
+                  x1={measurementCurrent.x} 
+                  y1={TOP_MARGIN} 
+                  x2={measurementCurrent.x} 
+                  y2={HEIGHT - BOTTOM_MARGIN} 
+                  stroke="#1e88e5" 
+                  strokeWidth="1.5" 
+                  strokeDasharray="4 4"
+                  opacity="0.8"
+                />
+                <line 
+                  x1={leftGutter} 
+                  y1={measurementCurrent.y} 
+                  x2={WIDTH - RIGHT_MARGIN_DYNAMIC} 
+                  y2={measurementCurrent.y} 
+                  stroke="#1e88e5" 
+                  strokeWidth="1.5" 
+                  strokeDasharray="4 4"
+                  opacity="0.8"
+                />
+                
+                {/* Cerchi sui punti */}
+                <circle 
+                  cx={measurementStart.x} 
+                  cy={measurementStart.y} 
+                  r="6" 
+                  fill="#1e88e5" 
+                  stroke="#fff" 
+                  strokeWidth="2"
+                />
+                <circle 
+                  cx={measurementCurrent.x} 
+                  cy={measurementCurrent.y} 
+                  r="6" 
+                  fill="#1e88e5" 
+                  stroke="#fff" 
+                  strokeWidth="2"
+                />
+                
+                {/* Box con informazioni */}
+                {(() => {
+                  const pctChange = ((measurementCurrent.value - measurementStart.value) / measurementStart.value) * 100;
+                  const absChange = measurementCurrent.value - measurementStart.value;
+                  const barsDiff = Math.abs(Math.round((new Date(measurementCurrent.date) - new Date(measurementStart.date)) / (1000 * 60 * 60 * 24)));
+                  const volM = Math.abs(absChange) / 1000000;
+                  
+                  const boxX = Math.min(measurementStart.x, measurementCurrent.x) + Math.abs(measurementCurrent.x - measurementStart.x) / 2;
+                  const boxY = Math.min(measurementStart.y, measurementCurrent.y) - 60;
+                  
+                  return (
+                    <g>
+                      <rect
+                        x={boxX - 70}
+                        y={boxY}
+                        width="140"
+                        height="55"
+                        fill="#1e88e5"
+                        rx="6"
+                        opacity="0.95"
+                      />
+                      <text
+                        x={boxX}
+                        y={boxY + 16}
+                        textAnchor="middle"
+                        fontSize="14"
+                        fontWeight="bold"
+                        fill="#fff"
+                      >
+                        {pctChange > 0 ? '+' : ''}{pctChange.toFixed(2)}% {pctChange > 0 ? '↑' : '↓'}
+                      </text>
+                      <text
+                        x={boxX}
+                        y={boxY + 32}
+                        textAnchor="middle"
+                        fontSize="11"
+                        fill="#fff"
+                        opacity="0.9"
+                      >
+                        {barsDiff} bars, {barsDiff}d
+                      </text>
+                      <text
+                        x={boxX}
+                        y={boxY + 47}
+                        textAnchor="middle"
+                        fontSize="11"
+                        fill="#fff"
+                        opacity="0.9"
+                      >
+                        Vol {volM.toFixed(2)}M
+                      </text>
+                    </g>
+                  );
+                })()}
               </>
             )}
           </svg>
@@ -492,7 +843,13 @@ export default function PortfolioChart({ data, title, onHover = null, hoverIndex
 
           <div style={{ textAlign: 'center', fontSize: 13 }}>
             <span style={{ color: '#1e88e5', marginRight: 10 }}>Valore Portafoglio</span>
-            <span style={{ color: '#ffb300' }}>Totale Investito</span>
+            <span style={{ color: '#ffb300', marginRight: 10 }}>Totale Investito</span>
+            {overlayPath && (
+              <span style={{ color: '#66bb6a' }}>
+                {overlayInfo?.name || 'Overlay'}
+                {hasIndicatorOverlay && <span style={{ fontSize: 11, opacity: 0.7 }}> (asse dx)</span>}
+              </span>
+            )}
           </div>
 
           {/* KEY METRICS */}
@@ -578,6 +935,60 @@ export default function PortfolioChart({ data, title, onHover = null, hoverIndex
             textOverflow: 'ellipsis'
           }}>
             Aggiungi
+          </div>
+
+          {/* Tool: Misurazione */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              console.log('🔧 Measurement mode toggled:', !measurementMode);
+              setMeasurementMode(!measurementMode);
+              setMeasurementStart(null);
+              setMeasurementCurrent(null);
+              setMeasurementLocked(false);
+            }}
+            style={{
+              width: '44px',
+              height: '44px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: measurementMode ? 'rgba(30, 136, 229, 0.5)' : 'rgba(30, 136, 229, 0.2)',
+              border: measurementMode ? '2px solid #1e88e5' : '2px solid rgba(30, 136, 229, 0.4)',
+              borderRadius: '8px',
+              color: '#fff',
+              fontSize: '20px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              fontWeight: 'bold',
+              flexShrink: 0,
+              marginTop: '12px'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = 'rgba(30, 136, 229, 0.6)';
+              e.target.style.borderColor = '#42a5f5';
+              e.target.style.transform = 'scale(1.08)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = measurementMode ? 'rgba(30, 136, 229, 0.5)' : 'rgba(30, 136, 229, 0.2)';
+              e.target.style.borderColor = measurementMode ? '#1e88e5' : 'rgba(30, 136, 229, 0.4)';
+              e.target.style.transform = 'scale(1)';
+            }}
+            title="Misura variazione %"
+          >
+            📏
+          </button>
+          <div style={{
+            fontSize: '9px',
+            color: measurementMode ? '#1e88e5' : '#666',
+            textAlign: 'center',
+            lineHeight: '1.2',
+            maxWidth: '44px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            fontWeight: measurementMode ? '600' : '400'
+          }}>
+            Misura
           </div>
 
           {/* Footer Sidebar */}

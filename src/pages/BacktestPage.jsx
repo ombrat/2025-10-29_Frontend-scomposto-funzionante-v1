@@ -20,48 +20,61 @@ const AppMain = lazy(() => loadAppMain);
 export default function BacktestPage() {
   return (
     <div style={{
-      minHeight: 'calc(100vh - 120px)',
-      padding: '40px 20px'
+      minHeight: 'calc(100vh - 120px)', // Sottrae header e footer
+      display: 'flex',
+      flexDirection: 'column'
     }}>
-      {/* Titolo principale sul background */}
-      <h1 className="panel-title" style={{
-        margin: '0 0 10px 0',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '10px',
-        textAlign: 'center'
+      {/* Header della pagina */}
+      <div style={{
+        background: 'rgba(255, 255, 255, 0.02)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+        padding: '20px 0'
       }}>
-        📊 Simulatore di Backtest Finanziario
-      </h1>
-      <p style={{
-        fontSize: '16px',
-        color: '#999',
-        margin: '0 0 40px 0',
-        textAlign: 'center',
-        lineHeight: 1.4
-      }}>
-        Configura il tuo portafoglio, imposta i parametri e analizza i risultati.
-      </p>
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          padding: '0 20px'
+        }}>
+          <h1 className="panel-title" style={{
+            margin: '0 0 10px 0',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px'
+          }}>
+            📊 Simulatore di Backtest Finanziario
+          </h1>
+          <p style={{
+            fontSize: '16px',
+            color: '#999',
+            margin: 0,
+            lineHeight: 1.4
+          }}>
+            Testa le tue strategie di investimento con dati storici reali. 
+            Configura il tuo portafoglio, imposta i parametri e analizza i risultati.
+          </p>
+        </div>
+      </div>
 
       {/* Contenuto principale - AppMain esistente */}
-      <Suspense fallback={
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '400px',
-          flexDirection: 'column',
-          gap: '20px'
-        }}>
-          <Spinner />
-          <div style={{ color: '#999', fontSize: '16px' }}>
-            Caricamento simulatore di backtest...
+      <div style={{ flex: 1 }}>
+        <Suspense fallback={
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '400px',
+            flexDirection: 'column',
+            gap: '20px'
+          }}>
+            <Spinner />
+            <div style={{ color: '#999', fontSize: '16px' }}>
+              Caricamento simulatore di backtest...
+            </div>
           </div>
-        </div>
-      }>
-        <AppMain />
-      </Suspense>
+        }>
+          <AppMain />
+        </Suspense>
+      </div>
     </div>
   );
 }

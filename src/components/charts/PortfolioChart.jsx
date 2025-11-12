@@ -544,7 +544,12 @@ export default function PortfolioChart({ data, title, onHover = null, hoverIndex
     <div ref={wrapperRef} style={{ marginTop: 18 }}>
       <h3 className="panel-title" style={{ marginBottom: 12, textAlign: 'center' }}>{title || 'Andamento Storico Portafoglio'}</h3>
       
-      <div className="panel" style={{ padding: 14, border: '1px solid #222', position: 'relative' }}>
+      <div style={{ 
+        padding: 14, 
+        background: 'rgba(255, 255, 255, 0.02)', 
+        borderRadius: 8,
+        position: 'relative'
+      }}>
       
       {/* Badge Overlay Attivo */}
       {overlayInfo && (

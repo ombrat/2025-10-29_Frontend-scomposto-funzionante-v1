@@ -132,26 +132,31 @@ export default function BacktestSummary({ result, hideChart = false }) {
     const recoveryFormatted = (typeof recoveryDays === 'number' && isFinite(recoveryDays)) ? `${recoveryDays} giorni` : '-';
 
     return (
-      <div className="card" style={{ marginTop: 6 }}>
-        {/* Etichette per i 3 peggiori drawdown - SOPRA IL GRAFICO */}
+      <div>
+        {/* Titolo FUORI dal contenitore */}
         {worstDrawdowns.length > 0 && (
-          <div style={{ 
-            marginBottom: 20, 
-            paddingBottom: 20, 
-            borderBottom: '1px solid rgba(239, 83, 80, 0.3)'
+          <h3 className="panel-title" style={{ 
+            color: '#ef5350', 
+            margin: '0 0 15px 0', 
+            textAlign: 'center',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px'
           }}>
-            <h3 style={{ 
-              color: '#ef5350', 
-              margin: '0 0 15px 0', 
-              fontSize: '18px',
-              textAlign: 'center',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px'
+            📉 I 3 Peggiori Periodi di Drawdown
+          </h3>
+        )}
+        
+        {/* Contenuto nel card senza titolo */}
+        <div className="card" style={{ marginTop: 6 }}>
+          {/* Etichette per i 3 peggiori drawdown */}
+          {worstDrawdowns.length > 0 && (
+            <div style={{ 
+              marginBottom: 20, 
+              paddingBottom: 20, 
+              borderBottom: '1px solid rgba(239, 83, 80, 0.3)'
             }}>
-              📉 I 3 Peggiori Periodi di Drawdown
-            </h3>
             
             <div style={{ 
               display: 'flex', 
@@ -283,6 +288,7 @@ export default function BacktestSummary({ result, hideChart = false }) {
         />
 
       </div>
+    </div>
     );
   };
 
@@ -317,14 +323,12 @@ export default function BacktestSummary({ result, hideChart = false }) {
         ✓ Completato
       </div>
 
-      <h3 style={{ 
+      <h3 className="panel-title" style={{ 
         color: '#1e88e5', 
         margin: '0 0 20px 0', 
-        fontSize: 18,
         display: 'flex',
         alignItems: 'center',
-        gap: '8px',
-        fontWeight: 600
+        gap: '8px'
       }}>
         📈 Risultati Backtest - Analisi Completa
       </h3>

@@ -19,7 +19,7 @@ export default function PortfolioPreview({ result, title = 'Preview Portafoglio'
   return (
     <div className="panel" style={{ padding: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h4 style={{ color: '#fff', margin: 0 }}>{title}</h4>
+        <h4 className="panel-title" style={{ margin: 0 }}>{title}</h4>
         <div style={{ color: '#aaa', fontSize: 12 }}>{summary.period ?? ''}</div>
       </div>
 

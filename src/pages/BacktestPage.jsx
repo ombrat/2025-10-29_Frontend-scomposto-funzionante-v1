@@ -35,10 +35,8 @@ export default function BacktestPage() {
           margin: '0 auto',
           padding: '0 20px'
         }}>
-          <h1 style={{
-            fontSize: '28px',
+          <h1 className="panel-title" style={{
             margin: '0 0 10px 0',
-            color: '#fff',
             display: 'flex',
             alignItems: 'center',
             gap: '10px'

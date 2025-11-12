@@ -130,11 +130,8 @@ export default function ExtremePerformanceHistogram({ summary, allAnnualReturns 
           borderBottom: '2px solid rgba(255,255,255,0.1)',
           paddingBottom: 20
         }}>
-          <h3 style={{ 
-            color: '#fff', 
+          <h3 className="panel-title" style={{ 
             margin: 0,
-            fontSize: 24,
-            fontWeight: 700,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

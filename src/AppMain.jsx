@@ -256,7 +256,7 @@ export default function AppMain() {
       <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
         <img src={ReactLogo} alt="logo" style={{ width: 36, height: 36 }} />
         <div>
-          <strong style={{ color: '#66bb6a', display: 'block', fontSize: 18 }}>Simulatore di Backtest Finanziario</strong>
+          <strong className="panel-title" style={{ display: 'block', color: '#66bb6a' }}>Simulatore di Backtest Finanziario</strong>
           <small style={{ color: '#aeb3b3' }}>Interfaccia modulare</small>
         </div>
       </div>
@@ -276,7 +276,7 @@ export default function AppMain() {
       </div>
 
       <section aria-labelledby="summary-heading">
-        <h3 id="summary-heading" style={{ color: '#fff', margin: '6px 0' }}>Risultati Backtest</h3>
+        <h3 id="summary-heading" className="panel-title" style={{ margin: '6px 0' }}>Risultati Backtest</h3>
         
         {/* Grafico a torta della composizione del portafoglio */}
         {backtestResults && formParams && formParams.assets && (
@@ -324,10 +324,9 @@ export default function AppMain() {
                 ✓ Calcolata
               </div>
             )}
-            <h3 id="frontier-action-heading" style={{ 
+            <h3 id="frontier-action-heading" className="panel-title" style={{ 
               color: '#66bb6a', 
               margin: '0 0 15px 0', 
-              fontSize: 18,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -423,10 +422,9 @@ export default function AppMain() {
                 margin: '30px -20px -20px -20px',
                 padding: '30px 20px 20px 20px'
               }}>
-                <h3 style={{ 
+                <h3 className="panel-title" style={{ 
                   color: '#66bb6a', 
                   margin: '0 0 20px 0', 
-                  fontSize: 18, 
                   textAlign: 'center',
                   display: 'flex',
                   alignItems: 'center',
@@ -447,7 +445,7 @@ export default function AppMain() {
                     const hideChart = !!options.hideChart;
                     return (
                       <div style={{ marginTop: 40, paddingTop: 20, borderTop: `1px solid ${isSimulation ? '#ffb300' : '#66bb6a'}` }}>
-                        <h2 style={{ color: '#fff', marginBottom: 18, fontSize: 20 }}>{title}</h2>
+                        <h2 className="panel-title" style={{ marginBottom: 18 }}>{title}</h2>
                         <BacktestSummary result={result} hideChart={hideChart} />
                       </div>
                     );

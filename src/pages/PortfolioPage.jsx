@@ -15,10 +15,8 @@ export default function PortfolioPage() {
         textAlign: 'center',
         marginBottom: '50px'
       }}>
-        <h1 style={{
-          fontSize: '36px',
+        <h1 className="panel-title" style={{
           margin: '0 0 15px 0',
-          color: '#fff',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -50,8 +48,7 @@ export default function PortfolioPage() {
           borderRadius: '12px',
           padding: '30px'
         }}>
-          <h3 style={{
-            fontSize: '20px',
+          <h3 className="panel-title" style={{
             margin: '0 0 20px 0',
             color: '#66bb6a',
             display: 'flex',
@@ -86,8 +83,7 @@ export default function PortfolioPage() {
           borderRadius: '12px',
           padding: '30px'
         }}>
-          <h3 style={{
-            fontSize: '20px',
+          <h3 className="panel-title" style={{
             margin: '0 0 20px 0',
             color: '#1e88e5',
             display: 'flex',
@@ -123,10 +119,8 @@ export default function PortfolioPage() {
         padding: '40px',
         marginBottom: '50px'
       }}>
-        <h3 style={{
-          fontSize: '24px',
+        <h3 className="panel-title" style={{
           margin: '0 0 30px 0',
-          color: '#fff',
           textAlign: 'center'
         }}>
           📊 Metriche di Portfolio
@@ -178,10 +172,8 @@ export default function PortfolioPage() {
         borderRadius: '12px',
         padding: '40px'
       }}>
-        <h3 style={{
-          fontSize: '24px',
-          margin: '0 0 15px 0',
-          color: '#fff'
+        <h3 className="panel-title" style={{
+          margin: '0 0 15px 0'
         }}>
           Pronto per analizzare il tuo portfolio?
         </h3>

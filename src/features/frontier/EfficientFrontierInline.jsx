@@ -492,7 +492,7 @@ export default function EfficientFrontierInline({ frontierData, onSimulate, simu
     return (
       <div style={{ marginTop: 18, borderLeft: '4px solid #ffd54f' }} className="panel">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h4 style={{ color: '#ffd54f', margin: 0 }}>{p.label || 'Portafoglio Selezionato'}</h4>
+          <h4 className="panel-title" style={{ color: '#ffd54f', margin: 0 }}>{p.label || 'Portafoglio Selezionato'}</h4>
           <div>
             <button
               onClick={() => {
@@ -617,7 +617,7 @@ export default function EfficientFrontierInline({ frontierData, onSimulate, simu
 
   return (
     <div style={{ marginTop: 30, padding: 20 }} className="panel">
-      <h3 style={{ color: '#fff', textAlign: 'center', borderBottom: '1px dashed #333', paddingBottom: 12 }}>Frontiera Efficiente — Scatter interattivo</h3>
+      <h3 className="panel-title" style={{ textAlign: 'center', borderBottom: '1px dashed #333', paddingBottom: 12 }}>Frontiera Efficiente — Scatter interattivo</h3>
 
       <div ref={containerRefF} style={{ width: '100%', position: 'relative' }} onMouseMove={handleMouseMoveF} onMouseLeave={handleMouseLeaveF}>
         <svg ref={svgRefF} viewBox={`0 0 ${WIDTH_DEFAULT} ${HEIGHT_DEFAULT}`} style={{ width: '100%', height: `${Math.round(WIDTH_DEFAULT * 0.47)}px`, display: 'block', margin: '0 auto', cursor: hoverPoint ? 'pointer' : 'default' }}>

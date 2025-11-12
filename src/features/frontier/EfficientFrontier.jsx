@@ -15,7 +15,7 @@ export default function EfficientFrontier({ frontierData }) {
 
   return (
     <div className="panel" style={{ padding: 12 }}>
-      <h3 style={{ color: '#fff' }}>Frontiera Efficiente</h3>
+      <h3 className="panel-title">Frontiera Efficiente</h3>
       <p style={{ color: '#ccc' }}>Punti: {Array.isArray(frontierData.simulated_portfolios) ? frontierData.simulated_portfolios.length : 0}</p>
     </div>
   );

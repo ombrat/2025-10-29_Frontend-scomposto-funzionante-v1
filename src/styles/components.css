@@ -33,18 +33,27 @@
   box-sizing: border-box;
 }
 
-/* Card header/title */
+/* Card header/title - STANDARDIZZATO */
 .card-header, .panel-title {
-  font-weight: 800;
-  color: #fff;
-  margin-bottom: 8px;
-  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 12px;
+  font-size: 24px;
+  text-transform: none;
+  letter-spacing: 0px;
+  line-height: 1.4;
 }
-.panel-title {
-  font-size: 18px;
-  font-weight: 900;
+
+/* Override per titoli con stili inline */
+h1.panel-title, h2.panel-title, h3.panel-title, h4.panel-title, strong.panel-title {
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
 }
-.panel-title-success { color: #39e06b; } /* brighter green */
+
+.panel-title-success { 
+  color: #39e06b; 
+}
 
 /* Animazione pulse per indicatori live */
 @keyframes pulse {

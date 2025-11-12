@@ -616,8 +616,10 @@ export default function EfficientFrontierInline({ frontierData, onSimulate, simu
   };
 
   return (
-    <div style={{ marginTop: 30, padding: 20 }} className="panel">
-      <h3 className="panel-title" style={{ textAlign: 'center', borderBottom: '1px dashed #333', paddingBottom: 12 }}>Frontiera Efficiente — Scatter interattivo</h3>
+    <div style={{ marginTop: 30 }}>
+      <h3 className="panel-title" style={{ textAlign: 'center', borderBottom: '1px dashed #333', paddingBottom: 12, marginBottom: 20 }}>Frontiera Efficiente — Scatter interattivo</h3>
+
+      <div style={{ padding: 20 }} className="panel">
 
       <div ref={containerRefF} style={{ width: '100%', position: 'relative' }} onMouseMove={handleMouseMoveF} onMouseLeave={handleMouseLeaveF}>
         <svg ref={svgRefF} viewBox={`0 0 ${WIDTH_DEFAULT} ${HEIGHT_DEFAULT}`} style={{ width: '100%', height: `${Math.round(WIDTH_DEFAULT * 0.47)}px`, display: 'block', margin: '0 auto', cursor: hoverPoint ? 'pointer' : 'default' }}>
@@ -856,6 +858,7 @@ export default function EfficientFrontierInline({ frontierData, onSimulate, simu
             )}
           </div>
         )}
+        </div>
       </div>
     </div>
   );

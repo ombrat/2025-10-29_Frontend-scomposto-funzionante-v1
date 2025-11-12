@@ -113,22 +113,10 @@ export default function ExtremePerformanceHistogram({ summary, allAnnualReturns 
   };
 
   return (
-      
-      <div style={{ 
-        marginTop: 30, 
-        padding: 24,
-        background: 'linear-gradient(180deg, #0e0e0e, #0a0a0a)',
-        borderRadius: 10,
-        border: '1px solid rgba(255,255,255,0.06)',
-        boxShadow: '0 10px 30px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.02)',
-        color: '#f1f1f1',
-        animation: 'slideInUp 0.6s ease-out'
-      }}>
+      <div>
         <div style={{ 
           textAlign: 'center', 
-          marginBottom: 32,
-          borderBottom: '2px solid rgba(255,255,255,0.1)',
-          paddingBottom: 20
+          marginBottom: 20
         }}>
           <h3 className="panel-title" style={{ 
             margin: 0,
@@ -147,6 +135,17 @@ export default function ExtremePerformanceHistogram({ summary, allAnnualReturns 
             Analisi dei migliori e peggiori rendimenti annuali del portafoglio
           </p>
         </div>
+        
+        <div style={{ 
+          marginTop: 30, 
+          padding: 24,
+          background: 'linear-gradient(180deg, #0e0e0e, #0a0a0a)',
+          borderRadius: 10,
+          border: '1px solid rgba(255,255,255,0.06)',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.02)',
+          color: '#f1f1f1',
+          animation: 'slideInUp 0.6s ease-out'
+        }}>
         
         <div style={{ 
           display: 'flex', 
@@ -230,6 +229,7 @@ export default function ExtremePerformanceHistogram({ summary, allAnnualReturns 
         </div>
         
 
+        </div>
       </div>
   );
 }

@@ -42,12 +42,7 @@ export default function PortfolioPage() {
         marginBottom: '50px'
       }}>
         {/* Composizione Portfolio */}
-        <div style={{
-          background: 'rgba(255, 255, 255, 0.02)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          borderRadius: '12px',
-          padding: '30px'
-        }}>
+        <div>
           <h3 className="panel-title" style={{
             margin: '0 0 20px 0',
             color: '#66bb6a',
@@ -57,6 +52,12 @@ export default function PortfolioPage() {
           }}>
             🥧 Composizione Attuale
           </h3>
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.02)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '12px',
+            padding: '30px'
+          }}>
           <p style={{
             color: '#999',
             lineHeight: 1.6,
@@ -74,15 +75,11 @@ export default function PortfolioPage() {
           }}>
             📊 Disponibile nella sezione Backtest
           </div>
+          </div>
         </div>
 
         {/* Ottimizzazione */}
-        <div style={{
-          background: 'rgba(255, 255, 255, 0.02)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          borderRadius: '12px',
-          padding: '30px'
-        }}>
+        <div>
           <h3 className="panel-title" style={{
             margin: '0 0 20px 0',
             color: '#1e88e5',
@@ -92,6 +89,12 @@ export default function PortfolioPage() {
           }}>
             ⚖️ Ottimizzazione Pesi
           </h3>
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.02)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '12px',
+            padding: '30px'
+          }}>
           <p style={{
             color: '#999',
             lineHeight: 1.6,
@@ -109,22 +112,24 @@ export default function PortfolioPage() {
           }}>
             🔄 In sviluppo
           </div>
+          </div>
         </div>
       </div>
 
       {/* Metriche principali */}
-      <div style={{
-        background: 'rgba(255, 255, 255, 0.02)',
-        borderRadius: '12px',
-        padding: '40px',
-        marginBottom: '50px'
-      }}>
+      <div>
         <h3 className="panel-title" style={{
           margin: '0 0 30px 0',
           textAlign: 'center'
         }}>
           📊 Metriche di Portfolio
         </h3>
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.02)',
+          borderRadius: '12px',
+          padding: '40px',
+          marginBottom: '50px'
+        }}>
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
@@ -163,20 +168,23 @@ export default function PortfolioPage() {
             </div>
           ))}
         </div>
+        </div>
       </div>
 
       {/* Call to Action */}
-      <div style={{
-        textAlign: 'center',
-        background: 'linear-gradient(135deg, rgba(30, 136, 229, 0.1) 0%, rgba(102, 187, 106, 0.1) 100%)',
-        borderRadius: '12px',
-        padding: '40px'
-      }}>
+      <div>
         <h3 className="panel-title" style={{
-          margin: '0 0 15px 0'
+          margin: '0 0 15px 0',
+          textAlign: 'center'
         }}>
           Pronto per analizzare il tuo portfolio?
         </h3>
+        <div style={{
+          textAlign: 'center',
+          background: 'linear-gradient(135deg, rgba(30, 136, 229, 0.1) 0%, rgba(102, 187, 106, 0.1) 100%)',
+          borderRadius: '12px',
+          padding: '40px'
+        }}>
         <p style={{
           fontSize: '16px',
           color: '#999',
@@ -201,6 +209,7 @@ export default function PortfolioPage() {
         >
           📊 Vai al Backtest
         </a>
+        </div>
       </div>
     </div>
   );

@@ -294,18 +294,24 @@ export default function AppMain() {
       {/* Sezione per eseguire la frontiera efficiente */}
       {backtestResults && (
         <section aria-labelledby="frontier-action-heading" style={{ 
-          marginTop: 20, 
+          marginTop: 40, 
           animation: 'fadeIn 0.6s ease-out' 
         }}>
-          <div className="panel" style={{ 
-            padding: 20, 
+          <h3 id="frontier-action-heading" className="panel-title" style={{ 
+            color: '#66bb6a', 
+            margin: '0 0 20px 0', 
+            textAlign: 'center'
+          }}>
+            🚀 Analisi Frontiera Efficiente
+          </h3>
+
+          <div style={{ 
             textAlign: 'center', 
-            backgroundColor: frontierData ? 'rgba(102, 187, 106, 0.15)' : 'rgba(102, 187, 106, 0.1)', 
-            border: `2px solid ${frontierData ? '#66bb6a' : 'rgba(102, 187, 106, 0.6)'}`,
+            background: 'rgba(102, 187, 106, 0.1)', 
             borderRadius: 12,
-            transition: 'all 0.4s ease',
-            position: 'relative',
-            overflow: 'hidden'
+            padding: '30px 20px',
+            marginBottom: 20,
+            position: 'relative'
           }}>
             {frontierData && (
               <div style={{
@@ -324,16 +330,7 @@ export default function AppMain() {
                 ✓ Calcolata
               </div>
             )}
-            <h3 id="frontier-action-heading" className="panel-title" style={{ 
-              color: '#66bb6a', 
-              margin: '0 0 15px 0', 
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px'
-            }}>
-              📊 Analizza la Frontiera Efficiente
-            </h3>
+
             <p style={{ color: '#ccc', margin: '0 0 20px 0', fontSize: 14, lineHeight: 1.4, maxWidth: '600px', margin: '0 auto 20px auto' }}>
               {frontierData 
                 ? '✨ Frontiera efficiente calcolata con successo! Esplora i portafogli ottimali e le simulazioni interattive.' 

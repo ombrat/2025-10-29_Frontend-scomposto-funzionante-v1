@@ -293,45 +293,47 @@ export default function BacktestSummary({ result, hideChart = false }) {
   };
 
   return (
-    <div 
-      className="panel summary-panel" 
-      style={{ 
-        padding: 20, 
-        marginTop: 12,
-        background: 'linear-gradient(135deg, rgba(30, 136, 229, 0.05) 0%, rgba(30, 136, 229, 0.1) 100%)',
-        border: '2px solid rgba(30, 136, 229, 0.3)',
-        borderRadius: 12,
-        animation: 'fadeIn 0.6s ease-out',
-        position: 'relative',
-        overflow: 'hidden'
-      }}
-    >
-      {/* Status Badge */}
-      <div style={{
-        position: 'absolute',
-        top: 15,
-        right: 20,
-        backgroundColor: '#1e88e5',
-        color: '#fff',
-        padding: '4px 8px',
-        borderRadius: 12,
-        fontSize: 11,
-        fontWeight: 600,
-        textTransform: 'uppercase',
-        letterSpacing: '0.5px'
-      }}>
-        ✓ Completato
-      </div>
-
+    <div style={{ marginTop: 20 }}>
       <h3 className="panel-title" style={{ 
         color: '#1e88e5', 
         margin: '0 0 20px 0', 
         display: 'flex',
         alignItems: 'center',
-        gap: '8px'
+        gap: '8px',
+        textAlign: 'center',
+        justifyContent: 'center'
       }}>
         📈 Risultati Backtest - Analisi Completa
       </h3>
+
+      <div 
+        className="panel summary-panel" 
+        style={{ 
+          padding: 20, 
+          background: 'linear-gradient(135deg, rgba(30, 136, 229, 0.05) 0%, rgba(30, 136, 229, 0.1) 100%)',
+          border: '2px solid rgba(30, 136, 229, 0.3)',
+          borderRadius: 12,
+          animation: 'fadeIn 0.6s ease-out',
+          position: 'relative',
+          overflow: 'hidden'
+        }}
+      >
+        {/* Status Badge */}
+        <div style={{
+          position: 'absolute',
+          top: 15,
+          right: 20,
+          backgroundColor: '#1e88e5',
+          color: '#fff',
+          padding: '4px 8px',
+          borderRadius: 12,
+          fontSize: 11,
+          fontWeight: 600,
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px'
+        }}>
+          ✓ Completato
+        </div>
 
       {/* Statistics Summary */}
 
@@ -395,6 +397,7 @@ export default function BacktestSummary({ result, hideChart = false }) {
           <DrawdownSection summary={summary} chartData={chartData} />
         </div>
       </div>
+    </div>
     </div>
   );
 }

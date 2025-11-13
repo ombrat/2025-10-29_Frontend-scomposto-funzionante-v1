@@ -380,6 +380,72 @@ export default function UnifiedAnalysisPage() {
     return () => clearTimeout(timeoutId);
   }, [searchTerm, region]);
 
+  // ====================
+  // HELPER FUNCTIONS
+  // ====================
+
+  const addCustomIndicator = async (series) => {
+    try {
+      setLoadingLogs(prev => [...prev.slice(-8), `⏳ Caricamento ${series.id}...`]);
+      
+      let seriesData;
+      if (region === 'USA') {
+        seriesData = await macroService.getSingleSeries(series.id);
+      } else {
+        // Per EU, usa il servizio appropriato basato sulla fonte
+        if (series.source === 'ECB') {
+          seriesData = await ecbService.getSingleSeries(series.id);
+        } else {
+          seriesData = await eurostatService.getSingleSeries(series.id);
+        }
+      }
+      
+      if (seriesData && !seriesData.error) {
+        const customIndicator = {
+          ...seriesData,
+          category: 'custom',
+          addedAt: Date.now()
+        };
+        
+        setCustomIndicators(prev => ({
+          ...prev,
+          [series.id]: customIndicator
+        }));
+        
+        setSearchResults(prev => prev.filter(r => r.id !== series.id));
+        setLoadingLogs(prev => [...prev.slice(-8), `✅ ${series.id} aggiunto con successo`]);
+        
+        if (searchResults.length <= 1) {
+          setSearchTerm('');
+          setSearchResults([]);
+        }
+      }
+    } catch (error) {
+      console.error('Errore aggiunta indicatore:', error);
+      setLoadingLogs(prev => [...prev.slice(-8), `❌ Errore caricando ${series.id}: ${error.message}`]);
+    }
+  };
+
+  const getTotalFilteredResults = () => {
+    let total = 0;
+    Object.values(filteredCategories).forEach(indicators => {
+      total += indicators.length;
+    });
+    
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase();
+      const filteredCustom = Object.values(customIndicators).filter(indicator =>
+        indicator.name.toLowerCase().includes(searchLower) ||
+        indicator.id.toLowerCase().includes(searchLower)
+      );
+      total += filteredCustom.length;
+    } else {
+      total += Object.keys(customIndicators).length;
+    }
+    
+    return total;
+  };
+
   const filteredCategories = React.useMemo(() => {
     if (!macroData?.indicators) return {};
 
@@ -712,17 +778,17 @@ export default function UnifiedAnalysisPage() {
             {/* Ricerca & Confronto */}
             <AnalysisSearch
               searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
+              onSearchChange={setSearchTerm}
               selectedCategory={selectedCategory}
-              setSelectedCategory={setSelectedCategory}
-              region={region}
-              macroData={macroData}
-              totalIndicatorsCount={totalIndicatorsCount}
-              searchResults={searchResults}
+              onCategoryChange={setSelectedCategory}
+              categories={Object.keys(macroData?.indicators || {})}
+              totalResults={getTotalFilteredResults()}
+              onRefresh={loadAnalysisData}
               isSearching={isSearching}
+              searchResults={searchResults}
               searchError={searchError}
+              onAddCustomIndicator={addCustomIndicator}
               customIndicators={customIndicators}
-              setCustomIndicators={setCustomIndicators}
             />
 
             {/* Sezione Confronto */}

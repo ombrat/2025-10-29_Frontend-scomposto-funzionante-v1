@@ -71,25 +71,33 @@ export default function UnifiedAnalysisPage() {
     setHeatmapError(null);
 
     try {
-      let data;
+      let result;
       if (region === 'USA') {
-        data = await macroService.getAllMacroData();
+        result = await macroService.fetchMacroDataComplete();
       } else {
         const [ecbData, eurostatData] = await Promise.all([
-          ecbService.getAllEcbData(),
-          eurostatService.getAllEurostatData()
+          ecbService.fetchEcbDataComplete(),
+          eurostatService.fetchEurostatDataComplete()
         ]);
         
-        data = {
-          indicators: {
-            'BCE': ecbData.indicators?.['BCE'] || [],
-            'Eurostat': eurostatData.indicators?.['Eurostat'] || []
+        result = {
+          data: {
+            'BCE': ecbData.data?.['BCE'] || [],
+            'Eurostat': eurostatData.data?.['Eurostat'] || []
           },
-          lastUpdate: new Date().toISOString()
+          metadata: {
+            lastUpdate: new Date().toISOString()
+          }
         };
       }
       
-      setHeatmapData(data);
+      // Normalizza struttura: usa sempre 'indicators' per compatibilità
+      const normalizedData = {
+        indicators: result.data || result.indicators || {},
+        metadata: result.metadata || { lastUpdate: new Date().toISOString() }
+      };
+      
+      setHeatmapData(normalizedData);
     } catch (err) {
       console.error('Errore caricamento heatmap:', err);
       setHeatmapError(err.message || 'Errore nel caricamento dei dati');
@@ -114,28 +122,37 @@ export default function UnifiedAnalysisPage() {
     try {
       addLog('🔌 Connessione al backend...');
       
-      let data;
+      let result;
+      
       if (region === 'USA') {
         addLog('🇺🇸 Caricamento indicatori USA (FRED)...');
-        data = await macroService.getAllMacroData();
+        result = await macroService.fetchMacroDataComplete(70);
       } else {
         addLog('🇪🇺 Caricamento indicatori EU (BCE + Eurostat)...');
         const [ecbData, eurostatData] = await Promise.all([
-          ecbService.getAllEcbData(),
-          eurostatService.getAllEurostatData()
+          ecbService.fetchEcbDataComplete(),
+          eurostatService.fetchEurostatDataComplete()
         ]);
         
-        data = {
-          indicators: {
-            ...ecbData.indicators,
-            ...eurostatData.indicators
+        result = {
+          data: {
+            ...ecbData.data,
+            ...eurostatData.data
           },
-          lastUpdate: new Date().toISOString()
+          metadata: {
+            lastUpdate: new Date().toISOString()
+          }
         };
       }
       
-      addLog(`✅ ${Object.keys(data.indicators || {}).length} categorie caricate`);
-      setMacroData(data);
+      // Normalizza struttura: usa sempre 'indicators' per compatibilità con componenti
+      const normalizedData = {
+        indicators: result.data || result.indicators || {},
+        metadata: result.metadata || { lastUpdate: new Date().toISOString() }
+      };
+      
+      addLog(`✅ ${Object.keys(normalizedData.indicators).length} categorie caricate`);
+      setMacroData(normalizedData);
       
     } catch (err) {
       console.error('Errore caricamento analisi:', err);

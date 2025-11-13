@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import macroService from '../services/macroService';
+import ecbService from '../services/ecbService';
 
 // Layout e UI components
 import MainLayout from '../components/layout/MainLayout.jsx';
@@ -16,6 +17,7 @@ import '../styles/HeatmapPage-dark.css';
  * Design moderno ed elegante
  */
 const HeatmapPage = () => {
+  const [region, setRegion] = useState('USA'); // 'USA' o 'EU'
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -26,20 +28,23 @@ const HeatmapPage = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [region]);
 
   const loadData = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // Carica tutti gli indicatori FRED
-      const result = await macroService.fetchMacroDataComplete();
-      console.log('📊 Dati caricati per heatmap:', result);
+      // Carica tutti gli indicatori dalla regione selezionata
+      const result = region === 'USA' 
+        ? await macroService.fetchMacroDataComplete()
+        : await ecbService.fetchMacroDataComplete();
+      
+      console.log(`📊 Dati ${region} caricati per heatmap:`, result);
       
       setData(result);
     } catch (err) {
-      console.error('❌ Errore caricamento dati heatmap:', err);
+      console.error(`❌ Errore caricamento dati heatmap ${region}:`, err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -372,8 +377,41 @@ const HeatmapPage = () => {
               📊 Heatmap Indicatori Economici
             </div>
             <p className="text-muted">
-              Variazioni percentuali degli indicatori economici USA
+              Variazioni percentuali degli indicatori economici {region === 'USA' ? 'USA' : 'Eurozona'}
             </p>
+
+            {/* Toggle Regione */}
+            <div style={{ 
+              display: 'flex', 
+              gap: '10px', 
+              marginBottom: '20px',
+              padding: '15px',
+              background: 'rgba(255,255,255,0.03)',
+              borderRadius: '8px'
+            }}>
+              <Button 
+                onClick={() => setRegion('USA')}
+                variant={region === 'USA' ? 'primary' : 'secondary'}
+                style={{ 
+                  flex: 1,
+                  background: region === 'USA' ? '#2196F3' : 'rgba(255,255,255,0.1)',
+                  border: region === 'USA' ? '2px solid #2196F3' : '1px solid rgba(255,255,255,0.2)'
+                }}
+              >
+                🇺🇸 USA
+              </Button>
+              <Button 
+                onClick={() => setRegion('EU')}
+                variant={region === 'EU' ? 'primary' : 'secondary'}
+                style={{ 
+                  flex: 1,
+                  background: region === 'EU' ? '#FFC107' : 'rgba(255,255,255,0.1)',
+                  border: region === 'EU' ? '2px solid #FFC107' : '1px solid rgba(255,255,255,0.2)'
+                }}
+              >
+                🇪🇺 EUROZONA
+              </Button>
+            </div>
 
             <div className="heatmap-controls">
               <div className="control-group">

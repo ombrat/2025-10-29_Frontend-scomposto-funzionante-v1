@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test ECB Service</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { color: #003399; }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        button {
+            background: #003399;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #002266;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏦 Test ECB Service</h1>
+        
+        <div>
+            <button onclick="testSingleSeries()">Test Serie Singola (Inflazione)</button>
+            <button onclick="testMultipleSeries()">Test Serie Multiple</button>
+            <button onclick="clearLogs()">Pulisci Log</button>
+        </div>
+        
+        <div id="logs"></div>
+    </div>
+
+    <script type="module">
+        import { API_CONFIG } from '/src/config/apiConfig.js';
+
+        class EcbService {
+            constructor() {
+                this.ECB_API_BASE = 'https://data-api.ecb.europa.eu/service';
+                console.log('🏦 EcbService Test Initialized');
+            }
+
+            async fetchSeriesObservations(seriesId, startPeriod = null, endPeriod = null) {
+                try {
+                    const dataflow = seriesId.split('.')[0];
+                    let url = `${this.ECB_API_BASE}/data/${dataflow}/${seriesId}?format=jsondata&lastNObservations=10`;
+                    
+                    console.log(`📊 Fetching: ${url}`);
+
+                    const response = await fetch(url);
+
+                    if (!response.ok) {
+                        throw new Error(`BCE API error: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    const observations = this.parseEcbResponse(data);
+                    
+                    console.log(`✅ Loaded ${observations.length} observations for ${seriesId}`);
+                    
+                    let earliest_year = 'N/A';
+                    let latest_year = 'N/A';
+                    let years_span = 0;
+                    
+                    if (observations.length > 0) {
+                        const dates = observations.map(obs => new Date(obs.date));
+                        earliest_year = dates[0].getFullYear().toString();
+                        latest_year = dates[dates.length - 1].getFullYear().toString();
+                        years_span = parseInt(latest_year) - parseInt(earliest_year);
+                    }
+                    
+                    return {
+                        series_id: seriesId,
+                        dataflow: dataflow,
+                        observations: observations,
+                        count: observations.length,
+                        earliest_date: observations[0]?.date || 'N/A',
+                        latest_date: observations[observations.length - 1]?.date || 'N/A',
+                        earliest_year: earliest_year,
+                        latest_year: latest_year,
+                        years_span: years_span
+                    };
+                } catch (error) {
+                    console.error(`❌ Error loading series ${seriesId}:`, error);
+                    throw error;
+                }
+            }
+
+            parseEcbResponse(data) {
+                try {
+                    const observations = [];
+                    
+                    if (!data.dataSets || data.dataSets.length === 0) {
+                        console.log('⚠️ No dataset in response');
+                        return observations;
+                    }
+
+                    const dataset = data.dataSets[0];
+                    const series = dataset.series;
+                    if (!series) {
+                        console.log('⚠️ No series in dataset');
+                        return observations;
+                    }
+
+                    const seriesKey = Object.keys(series)[0];
+                    const seriesData = series[seriesKey];
+                    if (!seriesData || !seriesData.observations) {
+                        console.log('⚠️ No observations in series');
+                        return observations;
+                    }
+
+                    const timeDimension = data.structure.dimensions.observation.find(d => d.id === 'TIME_PERIOD');
+                    if (!timeDimension || !timeDimension.values) {
+                        console.log('⚠️ Time dimension not found');
+                        return observations;
+                    }
+
+                    const timeValues = timeDimension.values;
+                    
+                    Object.keys(seriesData.observations).forEach(obsIndex => {
+                        const index = parseInt(obsIndex);
+                        const obsArray = seriesData.observations[obsIndex];
+                        const value = obsArray[0];
+                        
+                        if (index < timeValues.length && value !== null && value !== undefined) {
+                            observations.push({
+                                date: this.formatEcbDate(timeValues[index].id),
+                                value: String(value)
+                            });
+                        }
+                    });
+
+                    console.log(`📊 Parsed ${observations.length} observations`);
+                    return observations;
+                } catch (error) {
+                    console.error('❌ Error parsing BCE response:', error);
+                    console.error('Stack:', error.stack);
+                    return [];
+                }
+            }
+
+            formatEcbDate(ecbDate) {
+                if (ecbDate.includes('Q')) {
+                    const [year, quarter] = ecbDate.split('-Q');
+                    const month = (parseInt(quarter) - 1) * 3 + 1;
+                    return `${year}-${String(month).padStart(2, '0')}-01`;
+                } else if (ecbDate.includes('-')) {
+                    return `${ecbDate}-01`;
+                } else {
+                    return `${ecbDate}-01-01`;
+                }
+            }
+        }
+
+        const ecbService = new EcbService();
+
+        window.testSingleSeries = async function() {
+            addLog('info', '🧪 Testing single series: ICP.M.U2.N.000000.4.ANR (Inflation)');
+            try {
+                const result = await ecbService.fetchSeriesObservations('ICP.M.U2.N.000000.4.ANR');
+                addLog('success', `✅ Success! Loaded ${result.count} observations`);
+                addLog('info', `Date range: ${result.earliest_date} to ${result.latest_date}`);
+                addLog('info', 'Sample data (last 5):');
+                const sample = result.observations.slice(-5);
+                addLog('info', `<pre>${JSON.stringify(sample, null, 2)}</pre>`);
+            } catch (error) {
+                addLog('error', `❌ Error: ${error.message}`);
+            }
+        };
+
+        window.testMultipleSeries = async function() {
+            const series = [
+                'ICP.M.U2.N.000000.4.ANR',
+                'STS.M.I8.S.UNEH.RTT000.4.000',
+                'STS.M.I8.Y.PROD.NS0020.4.000'
+            ];
+            
+            addLog('info', `🧪 Testing ${series.length} series...`);
+            
+            let success = 0;
+            let failed = 0;
+            
+            for (const seriesId of series) {
+                try {
+                    addLog('info', `Loading ${seriesId}...`);
+                    const result = await ecbService.fetchSeriesObservations(seriesId);
+                    addLog('success', `✅ ${seriesId}: ${result.count} observations`);
+                    success++;
+                } catch (error) {
+                    addLog('error', `❌ ${seriesId}: ${error.message}`);
+                    failed++;
+                }
+            }
+            
+            addLog('info', `📊 Results: ${success} success, ${failed} failed`);
+        };
+
+        window.clearLogs = function() {
+            document.getElementById('logs').innerHTML = '';
+        };
+
+        function addLog(type, message) {
+            const logs = document.getElementById('logs');
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            logs.appendChild(div);
+            console.log(message);
+        }
+
+        // Auto-run on load
+        addLog('success', '✅ ECB Service Test Ready');
+    </script>
+</body>
+</html>

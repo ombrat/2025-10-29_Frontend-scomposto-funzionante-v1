@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import macroService from '../services/macroService.js';
+import ecbService from '../services/ecbService.js';
 
 // Layout e UI components
 import MainLayout from '../components/layout/MainLayout.jsx';
@@ -29,6 +30,7 @@ import '../styles/components.css';
 
 export default function AnalysisPage() {
   // Stati principali
+  const [region, setRegion] = useState('USA'); // 'USA' o 'EU'
   const [macroData, setMacroData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -67,7 +69,7 @@ export default function AnalysisPage() {
     return indicators;
   }, [macroData]);
 
-  // Funzione per cercare indicatori esterni tramite FRED API
+  // Funzione per cercare indicatori esterni tramite FRED/ECB API
   const searchExternalIndicators = async (searchText) => {
     if (!searchText || searchText.length < 2) {
       setSearchResults([]);
@@ -78,8 +80,11 @@ export default function AnalysisPage() {
     setSearchError(null);
 
     try {
-      // Usa macroService per la ricerca FRED
-      const { results, error } = await macroService.searchFredSeries(searchText);
+      // Usa il servizio appropriato in base alla regione
+      const service = region === 'USA' ? macroService : ecbService;
+      const { results, error } = region === 'USA' 
+        ? await service.searchFredSeries(searchText)
+        : await service.searchEcbSeries(searchText);
       
       if (error) {
         setSearchError(error);
@@ -182,10 +187,10 @@ export default function AnalysisPage() {
     }
   }, [macroData, expandedCategories]);
 
-  // Carica dati iniziali
+  // Carica dati iniziali (ricarica quando cambia regione)
   useEffect(() => {
     loadMacroData();
-  }, []);
+  }, [region]);
 
   const addLog = (message) => {
     const timestamp = new Date().toLocaleTimeString();
@@ -199,15 +204,27 @@ export default function AnalysisPage() {
     setLoadingLogs([]);
     
     try {
-      addLog('🚀 Inizializzazione sistema analisi economica...');
-      addLog('🌐 Connessione Google Cloud Run FRED API...');
+      if (region === 'USA') {
+        addLog('🚀 Inizializzazione sistema analisi economica USA...');
+        addLog('🌐 Connessione Google Cloud Run FRED API...');
+        
+        const data = await macroService.fetchMacroDataComplete(70);
+        
+        addLog(`✅ Sistema pronto: ${data.metadata?.totalIndicators || 0} indicatori USA`);
+        addLog(`📊 Database: ${data.metadata?.totalDataPoints?.toLocaleString() || 0} punti dati`);
+        
+        setMacroData(data);
+      } else {
+        addLog('🚀 Inizializzazione sistema analisi economica EUROZONA...');
+        addLog('🌐 Connessione Google Cloud Run ECB API...');
+        
+        const data = await ecbService.fetchMacroDataComplete();
+        
+        addLog(`✅ Sistema pronto: indicatori Eurozona caricati`);
+        
+        setMacroData(data);
+      }
       
-      const data = await macroService.fetchMacroDataComplete(70);
-      
-      addLog(`✅ Sistema pronto: ${data.metadata?.totalIndicators || 0} indicatori`);
-      addLog(`📊 Database: ${data.metadata?.totalDataPoints?.toLocaleString() || 0} punti dati`);
-      
-      setMacroData(data);
       setLoading(false);
       
     } catch (err) {
@@ -363,6 +380,49 @@ export default function AnalysisPage() {
   // Main content
   const centerContent = (
     <div>
+      {/* Toggle Regione USA/EU */}
+      <div className="panel" style={{ marginBottom: '20px' }}>
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          gap: '20px'
+        }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: '18px', color: '#fff' }}>
+              🌍 Regione Economica
+            </h3>
+            <p style={{ margin: '5px 0 0 0', fontSize: '13px', color: '#999' }}>
+              Seleziona la regione per visualizzare gli indicatori
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <Button 
+              onClick={() => setRegion('USA')}
+              variant={region === 'USA' ? 'primary' : 'secondary'}
+              style={{ 
+                minWidth: '120px',
+                background: region === 'USA' ? '#2196F3' : 'rgba(255,255,255,0.1)',
+                border: region === 'USA' ? '2px solid #2196F3' : '1px solid rgba(255,255,255,0.2)'
+              }}
+            >
+              🇺🇸 USA
+            </Button>
+            <Button 
+              onClick={() => setRegion('EU')}
+              variant={region === 'EU' ? 'primary' : 'secondary'}
+              style={{ 
+                minWidth: '120px',
+                background: region === 'EU' ? '#FFC107' : 'rgba(255,255,255,0.1)',
+                border: region === 'EU' ? '2px solid #FFC107' : '1px solid rgba(255,255,255,0.2)'
+              }}
+            >
+              🇪🇺 EUROZONA
+            </Button>
+          </div>
+        </div>
+      </div>
+
       {/* Sezione di confronto */}
       {showCompareChart && primaryIndicator && (
         <CompareSection
@@ -372,7 +432,7 @@ export default function AnalysisPage() {
           onClose={closeCompare}
           allIndicators={allAvailableIndicators.filter(ind => ind.id !== primaryIndicator.id)}
           macroData={macroData}
-          macroService={macroService}
+          macroService={region === 'USA' ? macroService : ecbService}
         />
       )}
 
@@ -405,7 +465,7 @@ export default function AnalysisPage() {
             onToggleIndicator={toggleIndicator}
             onStartCompare={startCompare}
             macroData={macroData}
-            macroService={macroService}
+            macroService={region === 'USA' ? macroService : ecbService}
           />
         ))}
       </div>
@@ -420,7 +480,7 @@ export default function AnalysisPage() {
           expandedIndicators={expandedIndicators}
           onToggleIndicator={toggleIndicator}
           macroData={macroData}
-          macroService={macroService}
+          macroService={region === 'USA' ? macroService : ecbService}
         />
       )}
 

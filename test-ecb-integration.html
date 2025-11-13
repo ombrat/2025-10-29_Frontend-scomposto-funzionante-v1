@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API BCE</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            color: #fff;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .test-section h2 {
+            margin-top: 0;
+            color: #FFC107;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .success {
+            color: #4CAF50;
+        }
+        .error {
+            color: #f44336;
+        }
+        .loading {
+            color: #FFC107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏦 Test Integrazione API BCE</h1>
+        
+        <div class="test-section">
+            <h2>1. Health Check</h2>
+            <button onclick="testHealth()">Test Health</button>
+            <div id="health-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>2. Test Connessione Storica</h2>
+            <button onclick="testHistorical()">Test Dati Storici</button>
+            <div id="historical-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>3. Indicatori Principali</h2>
+            <button onclick="testMainIndicators()">Carica Indicatori</button>
+            <div id="indicators-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>4. Osservazioni Serie Specifica</h2>
+            <button onclick="testSeriesObservations()">Test Inflazione HICP</button>
+            <div id="series-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>5. Calendario Economico</h2>
+            <button onclick="testCalendar()">Carica Calendario</button>
+            <div id="calendar-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>6. Test Batch (Multiple Serie)</h2>
+            <button onclick="testBatch()">Test Batch</button>
+            <div id="batch-result" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const ECB_API_URL = 'https://ecb-proxy-21722357706.europe-west1.run.app';
+
+        function displayResult(elementId, data, isError = false) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<span class="${isError ? 'error' : 'success'}">${JSON.stringify(data, null, 2)}</span>`;
+        }
+
+        function displayLoading(elementId) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = '<span class="loading">⏳ Caricamento...</span>';
+        }
+
+        async function testHealth() {
+            displayLoading('health-result');
+            try {
+                const response = await fetch(`${ECB_API_URL}/health`);
+                const data = await response.json();
+                displayResult('health-result', data);
+            } catch (error) {
+                displayResult('health-result', { error: error.message }, true);
+            }
+        }
+
+        async function testHistorical() {
+            displayLoading('historical-result');
+            try {
+                const response = await fetch(`${ECB_API_URL}/api/ecb/test?historical_test=true`);
+                const data = await response.json();
+                displayResult('historical-result', data);
+            } catch (error) {
+                displayResult('historical-result', { error: error.message }, true);
+            }
+        }
+
+        async function testMainIndicators() {
+            displayLoading('indicators-result');
+            try {
+                const response = await fetch(`${ECB_API_URL}/api/ecb/main-indicators`);
+                const data = await response.json();
+                
+                // Mostra solo un sommario per non sovraccaricare
+                const summary = data.map(ind => ({
+                    name: ind.name,
+                    id: ind.id,
+                    observations_count: ind.observations?.length || 0
+                }));
+                
+                displayResult('indicators-result', {
+                    total_indicators: data.length,
+                    indicators: summary
+                });
+            } catch (error) {
+                displayResult('indicators-result', { error: error.message }, true);
+            }
+        }
+
+        async function testSeriesObservations() {
+            displayLoading('series-result');
+            try {
+                const seriesId = 'ICP.M.U2.N.000000.4.ANR';
+                const response = await fetch(`${ECB_API_URL}/api/ecb/series/${seriesId}/observations`);
+                const data = await response.json();
+                
+                // Mostra solo un sommario
+                const summary = {
+                    series_id: data.series_id,
+                    count: data.count,
+                    earliest_date: data.earliest_date,
+                    latest_date: data.latest_date,
+                    years_span: data.years_span,
+                    first_5_observations: data.observations?.slice(0, 5),
+                    last_5_observations: data.observations?.slice(-5)
+                };
+                
+                displayResult('series-result', summary);
+            } catch (error) {
+                displayResult('series-result', { error: error.message }, true);
+            }
+        }
+
+        async function testCalendar() {
+            displayLoading('calendar-result');
+            try {
+                const response = await fetch(`${ECB_API_URL}/api/ecb/calendar?start_date=2025-11-03&end_date=2025-11-09`);
+                const data = await response.json();
+                displayResult('calendar-result', data);
+            } catch (error) {
+                displayResult('calendar-result', { error: error.message }, true);
+            }
+        }
+
+        async function testBatch() {
+            displayLoading('batch-result');
+            try {
+                const response = await fetch(`${ECB_API_URL}/api/ecb/batch`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        series: [
+                            'ICP.M.U2.N.000000.4.ANR',  // Inflazione
+                            'FM.D.U2.EUR.4F.KR.MRR_FR.LEV'  // Tasso BCE
+                        ]
+                    })
+                });
+                const data = await response.json();
+                
+                // Mostra sommario
+                const summary = {
+                    total_series: data.total_series,
+                    successful_series: data.successful_series,
+                    errors: data.errors,
+                    results_summary: Object.keys(data.results).map(seriesId => ({
+                        series_id: seriesId,
+                        observations_count: data.results[seriesId].count,
+                        years_span: data.results[seriesId].years_span
+                    }))
+                };
+                
+                displayResult('batch-result', summary);
+            } catch (error) {
+                displayResult('batch-result', { error: error.message }, true);
+            }
+        }
+
+        // Auto-test all'avvio
+        window.onload = () => {
+            console.log('🧪 Test page loaded. Click buttons to test API endpoints.');
+        };
+    </script>
+</body>
+</html>

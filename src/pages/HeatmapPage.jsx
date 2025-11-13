@@ -259,8 +259,8 @@ const HeatmapPage = () => {
 
     const change = cellData.changePercent;
     
-    // Indicatori INVERSI: aumento = negativo (rosso), diminuzione = positivo (verde)
-    const inverseIndicators = [
+    // Indicatori INVERSI USA: aumento = negativo (rosso), diminuzione = positivo (verde)
+    const inverseIndicatorsUSA = [
       'UNRATE',        // Disoccupazione
       'ICSA',          // Richieste sussidi disoccupazione
       'CPIAUCSL',      // Inflazione CPI
@@ -269,7 +269,22 @@ const HeatmapPage = () => {
       'DRCCLACBS',     // Insolvenza carte credito
     ];
     
-    const isInverse = inverseIndicators.includes(indicator.id);
+    // Indicatori INVERSI EU: aumento = negativo (rosso), diminuzione = positivo (verde)
+    const inverseIndicatorsEU = [
+      'UNEMPLOYMENT_EA',       // Disoccupazione
+      'HICP_EA',              // Inflazione HICP
+      'HICP_CORE',            // Inflazione core
+      'HICP_ENERGY',          // Inflazione energia
+      'HICP_FOOD',            // Inflazione alimentare
+      'PPI_EA',               // Prezzi produttori
+      'HICP_ENERGY_EA',       // Inflazione energia (BCE)
+      'HICP_FOOD_EA',         // Inflazione alimentare (BCE)
+      'HICP_CORE_EA',         // Inflazione core (BCE)
+    ];
+    
+    const isInverse = region === 'USA' 
+      ? inverseIndicatorsUSA.includes(indicator.id)
+      : inverseIndicatorsEU.includes(indicator.id);
     
     // Determina se il cambiamento è positivo o negativo per l'economia
     const isGoodChange = isInverse ? change < 0 : change > 0;
@@ -465,7 +480,7 @@ const HeatmapPage = () => {
                 gap: '12px'
               }}>
                 <span style={{ fontSize: '20px' }}>
-                  {region === 'USA' ? '📊' : 'ℹ️'}
+                  {region === 'USA' ? '📊' : '✅'}
                 </span>
                 <div style={{ flex: 1 }}>
                   <div style={{ 
@@ -475,13 +490,13 @@ const HeatmapPage = () => {
                     marginBottom: '3px'
                   }}>
                     {region === 'USA' 
-                      ? '🇺🇸 32 indicatori USA disponibili'
-                      : '🇪🇺 10 indicatori Eurozona verificati'}
+                      ? '🇺🇸 30 indicatori USA disponibili'
+                      : '🇪🇺 26 indicatori Eurozona disponibili'}
                   </div>
                   <div style={{ color: '#bbb', fontSize: '12px', lineHeight: '1.4' }}>
                     {region === 'USA' 
                       ? 'Database completo con 70 anni di storia per ogni indicatore'
-                      : 'Copertura limitata - Molti indicatori BCE deprecati dall\'API SDW'}
+                      : '10 BCE + 16 Eurostat - Database completo con storia da 1995'}
                   </div>
                 </div>
               </div>
@@ -627,16 +642,22 @@ const HeatmapPage = () => {
                           <span className="expand-icon">
                             {expandedRows.has(row.id) ? '▼' : '▶'}
                           </span>
-                          <a
-                            href={`https://fred.stlouisfed.org/series/${row.id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="indicator-name-link"
-                            title={`Apri ${row.id} su FRED`}
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {row.name}
-                          </a>
+                          {region === 'USA' ? (
+                            <a
+                              href={`https://fred.stlouisfed.org/series/${row.id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="indicator-name-link"
+                              title={`Apri ${row.id} su FRED`}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {row.name}
+                            </a>
+                          ) : (
+                            <span className="indicator-name-text" title={row.id}>
+                              {row.name}
+                            </span>
+                          )}
                           {row.units && <span className="indicator-units">{row.units}</span>}
                           {/* Info tooltip */}
                           <div className="info-tooltip-wrapper" onClick={(e) => e.stopPropagation()}>
@@ -644,7 +665,7 @@ const HeatmapPage = () => {
                             <div className="info-tooltip">
                               <strong>{row.name}</strong>
                               <p>{row.description || 'Nessuna descrizione disponibile'}</p>
-                              <small>Serie FRED: {row.id}</small>
+                              <small>Serie {region === 'USA' ? 'FRED' : 'ECB/Eurostat'}: {row.id}</small>
                             </div>
                           </div>
                         </div>
@@ -702,11 +723,13 @@ const HeatmapPage = () => {
         <div className="panel tight">
           <div className="heatmap-footer">
             <p className="text-muted">
-              <strong>Fonte dati:</strong> Federal Reserve Economic Data (FRED) via Google Cloud Run
+              <strong>Fonte dati:</strong> {region === 'USA' 
+                ? 'Federal Reserve Economic Data (FRED) via Google Cloud Run'
+                : 'ECB Statistical Data Warehouse + Eurostat via Google Cloud Run'}
             </p>
             <p className="small-muted">
               <strong>Nota:</strong> I colori rappresentano la variazione percentuale rispetto al periodo precedente.
-              Verde = crescita, Rosso = decrescita. Per indicatori come disoccupazione e volatilità, i colori sono invertiti.
+              Verde = crescita, Rosso = decrescita. Per indicatori come disoccupazione, inflazione e volatilità, i colori sono invertiti.
             </p>
           </div>
           </div>

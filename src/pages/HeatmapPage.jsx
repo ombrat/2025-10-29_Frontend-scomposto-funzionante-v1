@@ -23,7 +23,7 @@ const HeatmapPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [viewMode, setViewMode] = useState('monthly'); // 'monthly' o 'quarterly'
-  const [yearsToShow, setYearsToShow] = useState(2); // Ultimi 2 anni
+  const [yearsToShow, setYearsToShow] = useState(1); // Ultimi 1 anno (12 mesi = no scroll)
   const [expandedRows, setExpandedRows] = useState(new Set()); // Righe espanse
   const [searchFilter, setSearchFilter] = useState(''); // Filtro di ricerca
 
@@ -461,164 +461,224 @@ const HeatmapPage = () => {
   return (
     <MainLayout 
       center={
-        <div className="heatmap-content">
-          <div className="panel">
-            <div className="panel-title">
-              📊 Heatmap Indicatori Economici
-            </div>
-            <p className="text-muted">
-              Variazioni percentuali degli indicatori economici {region === 'USA' ? 'USA' : 'Eurozona'}
-            </p>
-
-            {/* Toggle Regione */}
+        <div className="heatmap-page">
+          {/* Header Compatto */}
+          <div className="panel" style={{ marginBottom: '15px' }}>
+            {/* Prima Riga: Titolo + Toggle Regione + Info */}
             <div style={{ 
               display: 'flex', 
-              gap: '10px', 
-              marginBottom: '20px',
-              padding: '15px',
-              background: 'rgba(255,255,255,0.03)',
-              borderRadius: '8px'
+              alignItems: 'center', 
+              gap: '20px',
+              marginBottom: '12px',
+              flexWrap: 'wrap'
             }}>
-              <Button 
-                onClick={() => setRegion('USA')}
-                variant={region === 'USA' ? 'primary' : 'secondary'}
-                style={{ 
-                  flex: 1,
-                  background: region === 'USA' ? '#2196F3' : 'rgba(255,255,255,0.1)',
-                  border: region === 'USA' ? '2px solid #2196F3' : '1px solid rgba(255,255,255,0.2)'
-                }}
-              >
-                🇺🇸 USA
-              </Button>
-              <Button 
-                onClick={() => setRegion('EU')}
-                variant={region === 'EU' ? 'primary' : 'secondary'}
-                style={{ 
-                  flex: 1,
-                  background: region === 'EU' ? '#FFC107' : 'rgba(255,255,255,0.1)',
-                  border: region === 'EU' ? '2px solid #FFC107' : '1px solid rgba(255,255,255,0.2)'
-                }}
-              >
-                🇪🇺 EUROZONA
-              </Button>
+              <div style={{ flex: '0 0 auto' }}>
+                <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '600' }}>
+                  📊 Heatmap Indicatori
+                </h2>
+              </div>
+              
+              {/* Toggle Regione Compatto */}
+              <div style={{ 
+                display: 'flex', 
+                gap: '8px',
+                background: 'rgba(255,255,255,0.05)',
+                padding: '4px',
+                borderRadius: '8px',
+                border: '1px solid rgba(255,255,255,0.1)'
+              }}>
+                <Button 
+                  onClick={() => setRegion('USA')}
+                  variant={region === 'USA' ? 'primary' : 'secondary'}
+                  style={{ 
+                    padding: '6px 16px',
+                    fontSize: '13px',
+                    background: region === 'USA' ? '#2196F3' : 'transparent',
+                    border: 'none',
+                    fontWeight: region === 'USA' ? '600' : '400'
+                  }}
+                >
+                  🇺🇸 USA
+                </Button>
+                <Button 
+                  onClick={() => setRegion('EU')}
+                  variant={region === 'EU' ? 'primary' : 'secondary'}
+                  style={{ 
+                    padding: '6px 16px',
+                    fontSize: '13px',
+                    background: region === 'EU' ? '#FFC107' : 'transparent',
+                    border: 'none',
+                    fontWeight: region === 'EU' ? '600' : '400'
+                  }}
+                >
+                  🇪🇺 EU
+                </Button>
+              </div>
+
+              {/* Info Badge Compatto */}
+              {!loading && data && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '6px 12px',
+                  background: region === 'USA' 
+                    ? 'rgba(33, 150, 243, 0.15)'
+                    : 'rgba(255, 193, 7, 0.15)',
+                  borderRadius: '6px',
+                  border: region === 'USA' 
+                    ? '1px solid rgba(33, 150, 243, 0.3)'
+                    : '1px solid rgba(255, 193, 7, 0.3)',
+                  fontSize: '12px',
+                  color: '#fff',
+                  fontWeight: '500'
+                }}>
+                  <span>{region === 'USA' ? '📊' : '✅'}</span>
+                  <span>
+                    {region === 'USA' ? '30 indicatori' : '23 indicatori'}
+                  </span>
+                </div>
+              )}
             </div>
 
-            {/* Banner informativo disponibilità dati */}
-            {!loading && data && (
-              <div style={{
-                background: region === 'USA' 
-                  ? 'linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05))'
-                  : 'linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 193, 7, 0.05))',
-                border: region === 'USA' 
-                  ? '1px solid rgba(33, 150, 243, 0.3)'
-                  : '1px solid rgba(255, 193, 7, 0.3)',
-                borderRadius: '8px',
-                padding: '12px 16px',
-                marginBottom: '15px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px'
-              }}>
-                <span style={{ fontSize: '20px' }}>
-                  {region === 'USA' ? '📊' : '✅'}
-                </span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ 
-                    color: '#fff', 
-                    fontSize: '13px', 
-                    fontWeight: '600',
-                    marginBottom: '3px'
-                  }}>
-                    {region === 'USA' 
-                      ? '🇺🇸 30 indicatori USA disponibili'
-                      : '🇪🇺 23 indicatori Eurozona disponibili'}
-                  </div>
-                  <div style={{ color: '#bbb', fontSize: '12px', lineHeight: '1.4' }}>
-                    {region === 'USA' 
-                      ? 'Database completo con 70 anni di storia per ogni indicatore'
-                      : '6 BCE + 17 Eurostat - Database completo con storia da 1995'}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="heatmap-controls">
-              <div className="control-group">
-                <label>🔍 Ricerca:</label>
+            {/* Seconda Riga: Controlli Inline + Legenda */}
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '15px',
+              flexWrap: 'wrap'
+            }}>
+              {/* Ricerca */}
+              <div style={{ flex: '1 1 250px', minWidth: '200px', position: 'relative' }}>
                 <input
                   type="text"
-                  placeholder="Cerca indicatore..."
+                  placeholder="🔍 Cerca indicatore..."
                   value={searchFilter}
                   onChange={(e) => setSearchFilter(e.target.value)}
-                  className="search-input"
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '6px',
+                    color: '#fff',
+                    fontSize: '13px'
+                  }}
                 />
                 {searchFilter.trim() && (
-                  <span className="search-results-count">
+                  <span style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    fontSize: '11px',
+                    color: '#888',
+                    background: 'rgba(0,0,0,0.5)',
+                    padding: '2px 6px',
+                    borderRadius: '4px'
+                  }}>
                     {filteredRows.length} risultat{filteredRows.length === 1 ? 'o' : 'i'}
                   </span>
                 )}
               </div>
 
-              <div className="control-group">
-                <label>Visualizzazione:</label>
-                <select 
-                  value={viewMode} 
-                  onChange={(e) => setViewMode(e.target.value)}
-                  className="heatmap-select"
-                >
-                  <option value="monthly">Mensile</option>
-                  <option value="quarterly">Trimestrale</option>
-                </select>
+              {/* Visualizzazione */}
+              <select 
+                value={viewMode} 
+                onChange={(e) => setViewMode(e.target.value)}
+                style={{
+                  padding: '8px 12px',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '6px',
+                  color: '#fff',
+                  fontSize: '13px',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="monthly">📅 Mensile</option>
+                <option value="quarterly">📊 Trimestrale</option>
+              </select>
+
+              {/* Periodo */}
+              <select 
+                value={yearsToShow} 
+                onChange={(e) => setYearsToShow(parseInt(e.target.value))}
+                style={{
+                  padding: '8px 12px',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '6px',
+                  color: '#fff',
+                  fontSize: '13px',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="1">1 anno</option>
+                <option value="2">2 anni</option>
+                <option value="3">3 anni</option>
+                <option value="5">5 anni</option>
+              </select>
+
+              {/* Legenda Compatta */}
+              <div style={{ 
+                display: 'flex', 
+                gap: '8px', 
+                alignItems: 'center',
+                padding: '6px 12px',
+                background: 'rgba(255,255,255,0.03)',
+                borderRadius: '6px',
+                border: '1px solid rgba(255,255,255,0.1)',
+                fontSize: '11px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <div style={{ width: '14px', height: '14px', background: 'rgba(239, 68, 68, 0.9)', borderRadius: '2px' }}></div>
+                  <span style={{ color: '#aaa' }}>Peggio</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <div style={{ width: '14px', height: '14px', background: 'rgba(100, 116, 139, 0.2)', borderRadius: '2px', border: '1px solid #666' }}></div>
+                  <span style={{ color: '#aaa' }}>Neutro</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <div style={{ width: '14px', height: '14px', background: 'rgba(34, 197, 94, 0.9)', borderRadius: '2px' }}></div>
+                  <span style={{ color: '#aaa' }}>Meglio</span>
+                </div>
               </div>
 
-              <div className="control-group">
-                <label>Periodo:</label>
-                <select 
-                  value={yearsToShow} 
-                  onChange={(e) => setYearsToShow(parseInt(e.target.value))}
-                  className="heatmap-select"
-                >
-                  <option value="1">Ultimo anno</option>
-                  <option value="2">Ultimi 2 anni</option>
-                  <option value="3">Ultimi 3 anni</option>
-                  <option value="5">Ultimi 5 anni</option>
-                </select>
-              </div>
-
-              <Button onClick={loadData} className="refresh-btn">
-                🔄 Aggiorna
+              {/* Refresh Button */}
+              <Button 
+                onClick={loadData} 
+                style={{
+                  padding: '8px 14px',
+                  fontSize: '13px',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)'
+                }}
+              >
+                🔄
               </Button>
             </div>
           </div>
 
-          <div className="panel">
-            <div className="heatmap-legend">
-              <div className="legend-item">
-                <div className="legend-color" style={{ background: 'rgba(239, 68, 68, 0.9)' }}></div>
-                <span>Forte peggioramento</span>
-              </div>
-              <div className="legend-item">
-                <div className="legend-color" style={{ background: 'rgba(239, 68, 68, 0.35)' }}></div>
-                <span>Lieve peggioramento</span>
-              </div>
-              <div className="legend-item">
-                <div className="legend-color" style={{ background: 'rgba(100, 116, 139, 0.1)', border: '1px solid #ccc' }}></div>
-                <span>Stabile / Primo valore</span>
-              </div>
-              <div className="legend-item">
-                <div className="legend-color" style={{ background: 'rgba(34, 197, 94, 0.35)' }}></div>
-                <span>Lieve miglioramento</span>
-              </div>
-              <div className="legend-item">
-                <div className="legend-color" style={{ background: 'rgba(34, 197, 94, 0.9)' }}></div>
-                <span>Forte miglioramento</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="panel">
-            <div className="heatmap-container">
-        <div className="heatmap-scroll">
+          {/* Tabella Heatmap */}
+          <div className="panel" style={{ 
+            maxWidth: '100%', 
+            overflow: 'hidden',
+            boxSizing: 'border-box'
+          }}>
+            <div className="heatmap-container" style={{
+              maxWidth: '100%',
+              overflow: 'hidden',
+              boxSizing: 'border-box'
+            }}>
+        <div className="heatmap-scroll" style={{
+          overflowX: 'auto',
+          overflowY: 'auto',
+          maxHeight: '70vh',
+          width: '100%',
+          maxWidth: '100%',
+          boxSizing: 'border-box'
+        }}>
           <table className="heatmap-table">
             <thead>
               <tr>
@@ -796,8 +856,8 @@ const HeatmapPage = () => {
             </p>
           </div>
           </div>
+          </div>
         </div>
-      </div>
         }
       />
     );

@@ -67,9 +67,18 @@ class EurostatService {
       'growth': [
         { 
           id: 'GDP_EA', 
-          name: 'PIL Eurozona', 
+          name: 'PIL Eurozona (Crescita)', 
           description: 'Tasso di crescita del Prodotto Interno Lordo dell\'Eurozona. Misura la variazione trimestrale dell\'attività economica nell\'area euro. È l\'indicatore più completo della salute economica.', 
           units: 'Percent Change', 
+          categoryKey: 'Crescita Economica',
+          dataset: 'namq_10_gdp',
+          frequency: 'Quarterly'
+        },
+        { 
+          id: 'GDP_VALUE_EA', 
+          name: '💶 PIL Eurozona (Valore)', 
+          description: 'Valore assoluto del Prodotto Interno Lordo dell\'Eurozona a prezzi correnti in miliardi di euro. Misura la dimensione totale dell\'economia dell\'area euro.', 
+          units: 'Billion EUR', 
           categoryKey: 'Crescita Economica',
           dataset: 'namq_10_gdp',
           frequency: 'Quarterly'

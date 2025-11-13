@@ -125,28 +125,68 @@ const HeatmapPage = () => {
 
   /**
    * Trova il valore esatto per un periodo specifico
-   * SEMPLICE: cerca solo la data esatta, niente calcoli complicati
+   * Gestisce formati: YYYY-MM-DD (FRED), YYYY-MM (Eurostat mensili), YYYY-QX (Eurostat trimestrali)
    */
+  // Rileva se un indicatore ha dati trimestrali o mensili
+  const detectDataFrequency = (observations) => {
+    if (!observations || observations.length === 0) return 'monthly';
+    
+    // Controlla le prime date per determinare il formato
+    const sampleDates = observations.slice(0, 5).map(o => o.date);
+    const hasQuarterly = sampleDates.some(d => d && d.includes('-Q'));
+    
+    return hasQuarterly ? 'quarterly' : 'monthly';
+  };
+
   const calculateValueForPeriod = (indicator, period) => {
     const observations = indicator.observations;
     if (!observations || observations.length === 0) return null;
 
-    // Costruisci la data target esatta
-    let targetYear = period.year;
-    let targetMonth;
+    // Rileva frequenza dei dati
+    const frequency = detectDataFrequency(observations);
+    
+    // Costruisci le possibili date target
+    let targetDates = [];
     
     if (period.month !== undefined) {
-      // Modalità mensile: usa il mese esatto
-      targetMonth = period.month;
-    } else {
-      // Modalità trimestrale: primo mese del trimestre
-      targetMonth = (period.quarter - 1) * 3;
+      // Modalità mensile
+      const monthStr = String(period.month + 1).padStart(2, '0');
+      
+      if (frequency === 'quarterly') {
+        // Per dati trimestrali, converti il mese in trimestre
+        // Mostra solo i dati nei mesi finali di ogni trimestre (marzo, giugno, settembre, dicembre)
+        const monthNum = period.month + 1;
+        const isQuarterEndMonth = monthNum % 3 === 0;
+        
+        if (!isQuarterEndMonth) {
+          // Questo mese non corrisponde a fine trimestre, salta
+          return null;
+        }
+        
+        const quarter = Math.ceil(monthNum / 3);
+        targetDates = [`${period.year}-Q${quarter}`];
+      } else {
+        // Dati mensili: cerca YYYY-MM-DD o YYYY-MM
+        targetDates = [
+          `${period.year}-${monthStr}-01`,  // FRED format (2024-11-01)
+          `${period.year}-${monthStr}`      // Eurostat format (2024-11)
+        ];
+      }
+    } else if (period.quarter !== undefined) {
+      // Modalità trimestrale: cerca YYYY-QX o YYYY-MM-DD del primo mese
+      const firstMonthOfQuarter = (period.quarter - 1) * 3 + 1;
+      targetDates = [
+        `${period.year}-Q${period.quarter}`,  // Eurostat format (2024-Q3)
+        `${period.year}-${String(firstMonthOfQuarter).padStart(2, '0')}-01`  // FRED format
+      ];
     }
-
-    // Cerca l'osservazione con data esatta (formato YYYY-MM-DD)
-    const targetDateStr = `${targetYear}-${String(targetMonth + 1).padStart(2, '0')}-01`;
     
-    const matchingObs = observations.find(obs => obs.date === targetDateStr);
+    // Cerca la prima data che matcha
+    let matchingObs = null;
+    for (const targetDate of targetDates) {
+      matchingObs = observations.find(obs => obs && obs.date && obs.date.trim() === targetDate);
+      if (matchingObs) break;
+    }
 
     if (!matchingObs || matchingObs.value === '.' || matchingObs.value === null) {
       return null;
@@ -156,7 +196,7 @@ const HeatmapPage = () => {
     if (isNaN(value)) return null;
 
     // Trova osservazione precedente per calcolare variazione
-    const currentIndex = observations.findIndex(obs => obs.date === targetDateStr);
+    const currentIndex = observations.findIndex(obs => obs.date === matchingObs.date);
     let previousValue = null;
     let changePercent = null;
     
@@ -491,12 +531,12 @@ const HeatmapPage = () => {
                   }}>
                     {region === 'USA' 
                       ? '🇺🇸 30 indicatori USA disponibili'
-                      : '🇪🇺 26 indicatori Eurozona disponibili'}
+                      : '🇪🇺 23 indicatori Eurozona disponibili'}
                   </div>
                   <div style={{ color: '#bbb', fontSize: '12px', lineHeight: '1.4' }}>
                     {region === 'USA' 
                       ? 'Database completo con 70 anni di storia per ogni indicatore'
-                      : '10 BCE + 16 Eurostat - Database completo con storia da 1995'}
+                      : '6 BCE + 17 Eurostat - Database completo con storia da 1995'}
                   </div>
                 </div>
               </div>
@@ -654,9 +694,32 @@ const HeatmapPage = () => {
                               {row.name}
                             </a>
                           ) : (
-                            <span className="indicator-name-text" title={row.id}>
-                              {row.name}
-                            </span>
+                            // Link per indicatori EU (BCE o Eurostat)
+                            row.id.includes('.') ? (
+                              // Indicatore BCE (formato con punti: ICP.M.U2...)
+                              <a
+                                href={`https://data.ecb.europa.eu/main-figures/ecb-statistics-explorer`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="indicator-name-link"
+                                title={`Apri ECB Statistics Explorer - Cerca: ${row.id}`}
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {row.name}
+                              </a>
+                            ) : (
+                              // Indicatore Eurostat (formato senza punti: UNEMPLOYMENT_EA, GDP_EA...)
+                              <a
+                                href={`https://ec.europa.eu/eurostat/databrowser/explore/all/all_themes`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="indicator-name-link"
+                                title={`Apri Eurostat Database Browser`}
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {row.name}
+                              </a>
+                            )
                           )}
                           {row.units && <span className="indicator-units">{row.units}</span>}
                           {/* Info tooltip */}

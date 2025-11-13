@@ -31,57 +31,15 @@ class EcbService {
    * AGGIORNATO: Solo indicatori verificati disponibili nell'API SDW BCE
    * 
    * CATEGORIE:
-   * 1. Mondo del Lavoro (1 indicatore)
-   * 2. Crescita Economica (3 indicatori)  
-   * 3. Solidità Economica (6 indicatori)
+   * 1. Solidità Economica (6 indicatori)
    * 
-   * TOTALE: 10 indicatori con dati storici completi (25-34 anni)
+   * TOTALE: 6 indicatori con dati storici completi e aggiornati
+   * 
+   * NOTA: Rimossi indicatori migrati a Eurostat (PIL, Produzione, Posti Vacanti)
    */
   getOfficialEcbIndicators() {
     return {
-      // === CATEGORIA 1: MONDO DEL LAVORO ===
-      'employment': [
-        { 
-          id: 'STS.M.I8.W.TOVT.NS0020.4.000', 
-          name: 'Posti Vacanti', 
-          description: 'Numero di posizioni lavorative disponibili nell\'Eurozona per cui le aziende cercano attivamente candidati. Un alto numero indica forte domanda di lavoro.', 
-          units: 'Index', 
-          categoryKey: 'Mondo del Lavoro',
-          dataflow: 'STS'
-        }
-        // NOTA: Disoccupazione e Occupazione rimossi - ID non più disponibili nell'API SDW BCE
-      ],
-
-      // === CATEGORIA 2: CRESCITA ECONOMICA ===
-      'growth': [
-        { 
-          id: 'MNA.Q.Y.I8.W2.S1.S1.B.B1GQ._Z._Z._Z.EUR.LR.N', 
-          name: 'PIL Eurozona', 
-          description: 'Prodotto Interno Lordo dell\'Eurozona. Valore totale di tutti i beni e servizi prodotti nell\'area euro in un trimestre. È la misura più completa dell\'attività economica.', 
-          units: 'Billion EUR', 
-          categoryKey: 'Crescita Economica',
-          dataflow: 'MNA'
-        },
-        { 
-          id: 'STS.M.I8.Y.PROD.NS0020.4.000', 
-          name: 'Produzione Industriale', 
-          description: 'Indice della produzione industriale nell\'Eurozona. Misura l\'output dei settori manifatturiero, minerario ed energetico. È un indicatore chiave della salute economica.', 
-          units: 'Index 2021=100', 
-          categoryKey: 'Crescita Economica',
-          dataflow: 'STS'
-        },
-        { 
-          id: 'STS.M.I8.Y.PROD.NS0040.4.000', 
-          name: 'Produzione Edilizia', 
-          description: 'Indice della produzione nel settore delle costruzioni. Il settore edile è spesso un indicatore anticipatore dei cicli economici.', 
-          units: 'Index 2021=100', 
-          categoryKey: 'Crescita Economica',
-          dataflow: 'STS'
-        }
-        // NOTA: Fatturato Industria e Vendite al Dettaglio rimossi - ID non più disponibili nell'API SDW BCE
-      ],
-
-      // === CATEGORIA 3: SOLIDITÀ ECONOMICA ===
+      // === CATEGORIA 1: SOLIDITÀ ECONOMICA ===
       'stability': [
         { 
           id: 'ICP.M.U2.N.000000.4.ANR', 
@@ -133,10 +91,6 @@ class EcbService {
         }
         // NOTA: Bilancia Commerciale rimossa - ID non più disponibile nell'API SDW BCE
       ]
-
-      // === CATEGORIA 4: FIDUCIA E SENTIMENT ===
-      // NOTA: Categoria rimossa - Gli indicatori di fiducia non sono più disponibili nell'API SDW BCE
-      // L'API BCE ha deprecato questi indicatori dal dataflow STS
     };
   }
 

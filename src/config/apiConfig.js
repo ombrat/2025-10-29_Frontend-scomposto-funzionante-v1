@@ -6,6 +6,9 @@ export const API_CONFIG = {
   // Backend ECB su Google Cloud Run (BCE - Eurozona)
   ECB_BACKEND_BASE_URL: 'https://ecb-proxy-21722357706.europe-west1.run.app',
   
+  // Backend Eurostat su Google Cloud Run (Eurostat - Eurozona)
+  EUROSTAT_BACKEND_BASE_URL: 'https://eurostat-proxy-21722357706.europe-west1.run.app',
+  
   // Alpha Vantage per news finanziarie
   ALPHA_VANTAGE_KEY: 'M768ALQQ3JVUXCGC',
   

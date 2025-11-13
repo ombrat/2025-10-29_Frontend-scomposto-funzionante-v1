@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import macroService from '../services/macroService';
 import ecbService from '../services/ecbService';
+import eurostatService from '../services/eurostatService';
 
 // Layout e UI components
 import MainLayout from '../components/layout/MainLayout.jsx';
@@ -35,10 +36,44 @@ const HeatmapPage = () => {
       setLoading(true);
       setError(null);
       
-      // Carica tutti gli indicatori dalla regione selezionata
-      const result = region === 'USA' 
-        ? await macroService.fetchMacroDataComplete()
-        : await ecbService.fetchMacroDataComplete();
+      let result;
+      
+      if (region === 'USA') {
+        // Carica dati FRED per USA
+        result = await macroService.fetchMacroDataComplete();
+      } else {
+        // Carica dati da ECB + Eurostat per EU in parallelo
+        const [ecbData, eurostatData] = await Promise.all([
+          ecbService.fetchMacroDataComplete(),
+          eurostatService.fetchMacroDataComplete()
+        ]);
+        
+        // Combina i dati
+        result = {
+          indicators: {},
+          metadata: {
+            totalIndicators: 0,
+            totalDataPoints: 0,
+            sources: ['ECB SDW', 'Eurostat'],
+            lastUpdate: Date.now()
+          }
+        };
+        
+        // Unisci indicatori per categoria
+        const allCategories = new Set([
+          ...Object.keys(ecbData.indicators || {}),
+          ...Object.keys(eurostatData.indicators || {})
+        ]);
+        
+        allCategories.forEach(categoryKey => {
+          result.indicators[categoryKey] = [
+            ...(ecbData.indicators[categoryKey] || []),
+            ...(eurostatData.indicators[categoryKey] || [])
+          ];
+        });
+        
+        console.log(`🇪🇺 Heatmap EU: ECB (${Object.values(ecbData.indicators || {}).flat().length}) + Eurostat (${Object.values(eurostatData.indicators || {}).flat().length}) indicatori`);
+      }
       
       console.log(`📊 Dati ${region} caricati per heatmap:`, result);
       
@@ -412,6 +447,45 @@ const HeatmapPage = () => {
                 🇪🇺 EUROZONA
               </Button>
             </div>
+
+            {/* Banner informativo disponibilità dati */}
+            {!loading && data && (
+              <div style={{
+                background: region === 'USA' 
+                  ? 'linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05))'
+                  : 'linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 193, 7, 0.05))',
+                border: region === 'USA' 
+                  ? '1px solid rgba(33, 150, 243, 0.3)'
+                  : '1px solid rgba(255, 193, 7, 0.3)',
+                borderRadius: '8px',
+                padding: '12px 16px',
+                marginBottom: '15px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
+                <span style={{ fontSize: '20px' }}>
+                  {region === 'USA' ? '📊' : 'ℹ️'}
+                </span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ 
+                    color: '#fff', 
+                    fontSize: '13px', 
+                    fontWeight: '600',
+                    marginBottom: '3px'
+                  }}>
+                    {region === 'USA' 
+                      ? '🇺🇸 32 indicatori USA disponibili'
+                      : '🇪🇺 10 indicatori Eurozona verificati'}
+                  </div>
+                  <div style={{ color: '#bbb', fontSize: '12px', lineHeight: '1.4' }}>
+                    {region === 'USA' 
+                      ? 'Database completo con 70 anni di storia per ogni indicatore'
+                      : 'Copertura limitata - Molti indicatori BCE deprecati dall\'API SDW'}
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="heatmap-controls">
               <div className="control-group">

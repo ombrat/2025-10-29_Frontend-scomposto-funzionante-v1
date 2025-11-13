@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import macroService from '../services/macroService.js';
 import ecbService from '../services/ecbService.js';
+import eurostatService from '../services/eurostatService.js';
 
 // Layout e UI components
 import MainLayout from '../components/layout/MainLayout.jsx';
@@ -81,10 +82,27 @@ export default function AnalysisPage() {
 
     try {
       // Usa il servizio appropriato in base alla regione
-      const service = region === 'USA' ? macroService : ecbService;
-      const { results, error } = region === 'USA' 
-        ? await service.searchFredSeries(searchText)
-        : await service.searchEcbSeries(searchText);
+      let results = [];
+      let error = null;
+      
+      if (region === 'USA') {
+        const fredSearch = await macroService.searchFredSeries(searchText);
+        results = fredSearch.results;
+        error = fredSearch.error;
+      } else {
+        // Per EU: cerca sia in ECB che in Eurostat
+        const [ecbSearch, eurostatSearch] = await Promise.all([
+          ecbService.searchEcbSeries(searchText),
+          eurostatService.searchEurostatSeries(searchText)
+        ]);
+        
+        // Combina risultati
+        results = [
+          ...(ecbSearch.results || []),
+          ...(eurostatSearch.results || [])
+        ];
+        error = ecbSearch.error || eurostatSearch.error;
+      }
       
       if (error) {
         setSearchError(error);
@@ -216,13 +234,49 @@ export default function AnalysisPage() {
         setMacroData(data);
       } else {
         addLog('🚀 Inizializzazione sistema analisi economica EUROZONA...');
-        addLog('🌐 Connessione Google Cloud Run ECB API...');
+        addLog('🌐 Connessione Google Cloud Run ECB + Eurostat API...');
         
-        const data = await ecbService.fetchMacroDataComplete();
+        // Carica dati da entrambe le fonti in parallelo
+        const [ecbData, eurostatData] = await Promise.all([
+          ecbService.fetchMacroDataComplete(),
+          eurostatService.fetchMacroDataComplete()
+        ]);
         
-        addLog(`✅ Sistema pronto: indicatori Eurozona caricati`);
+        // Combina i dati delle due fonti
+        const combinedData = {
+          indicators: {},
+          metadata: {
+            totalIndicators: 0,
+            totalDataPoints: 0,
+            sources: ['ECB SDW', 'Eurostat'],
+            lastUpdate: Date.now()
+          }
+        };
         
-        setMacroData(data);
+        // Unisci indicatori per categoria
+        const allCategories = new Set([
+          ...Object.keys(ecbData.indicators || {}),
+          ...Object.keys(eurostatData.indicators || {})
+        ]);
+        
+        allCategories.forEach(categoryKey => {
+          combinedData.indicators[categoryKey] = [
+            ...(ecbData.indicators[categoryKey] || []),
+            ...(eurostatData.indicators[categoryKey] || [])
+          ];
+          
+          combinedData.metadata.totalIndicators += combinedData.indicators[categoryKey].length;
+          combinedData.indicators[categoryKey].forEach(ind => {
+            combinedData.metadata.totalDataPoints += (ind.totalObservations || ind.count || 0);
+          });
+        });
+        
+        addLog(`✅ ECB: ${Object.values(ecbData.indicators || {}).flat().length} indicatori`);
+        addLog(`✅ Eurostat: ${Object.values(eurostatData.indicators || {}).flat().length} indicatori`);
+        addLog(`📊 Totale Eurozona: ${combinedData.metadata.totalIndicators} indicatori`);
+        addLog(`📊 Database: ${combinedData.metadata.totalDataPoints.toLocaleString()} punti dati`);
+        
+        setMacroData(combinedData);
       }
       
       setLoading(false);
@@ -422,6 +476,45 @@ export default function AnalysisPage() {
           </div>
         </div>
       </div>
+
+      {/* Banner informativo disponibilità dati */}
+      {!loading && macroData && (
+        <div style={{
+          background: region === 'USA' 
+            ? 'linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05))'
+            : 'linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 193, 7, 0.05))',
+          border: region === 'USA' 
+            ? '1px solid rgba(33, 150, 243, 0.3)'
+            : '1px solid rgba(255, 193, 7, 0.3)',
+          borderRadius: '8px',
+          padding: '12px 16px',
+          marginBottom: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          <span style={{ fontSize: '20px' }}>
+            {region === 'USA' ? '📊' : 'ℹ️'}
+          </span>
+          <div style={{ flex: 1 }}>
+            <div style={{ 
+              color: '#fff', 
+              fontSize: '13px', 
+              fontWeight: '600',
+              marginBottom: '3px'
+            }}>
+              {region === 'USA' 
+                ? '🇺🇸 Database USA Completo'
+                : '🇪🇺 Database Eurozona Limitato'}
+            </div>
+            <div style={{ color: '#bbb', fontSize: '12px', lineHeight: '1.4' }}>
+              {region === 'USA' 
+                ? `32 indicatori con 70 anni di storia | ${Object.values(macroData.indicators || {}).flat().length} serie disponibili`
+                : `10 indicatori verificati disponibili | Molti indicatori BCE sono stati deprecati dall'API SDW`}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Sezione di confronto */}
       {showCompareChart && primaryIndicator && (

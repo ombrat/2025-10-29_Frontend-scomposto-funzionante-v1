@@ -104,7 +104,7 @@ export default function PortfolioChart({ data, title, onHover = null, hoverIndex
   const { width: wrapperWidth } = useResizeObserver(wrapperRef);
 
   const computedWidth = Math.round(wrapperWidth || 900);
-  const WIDTH = Math.max(600, Math.min(1200, computedWidth));
+  const WIDTH = Math.max(600, Math.min(1800, computedWidth));
   const HEIGHT = Math.round(WIDTH * 0.44);
 
   const RIGHT_MARGIN = 48;

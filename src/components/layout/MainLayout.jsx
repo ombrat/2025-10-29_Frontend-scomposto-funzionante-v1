@@ -20,9 +20,11 @@ export default function MainLayout({ left, center, right }) {
     gridTemplateColumns,
     gap: '18px',
     padding: '22px',
-    maxWidth: '1300px',
+    maxWidth: 'calc(100vw - 100px)',
+    width: '100%',
     margin: '18px auto',
-    boxSizing: 'border-box'
+    boxSizing: 'border-box',
+    overflowX: 'hidden'
   };
 
   return (

@@ -162,9 +162,20 @@ a:hover {
   grid-template-columns: 320px 1fr 360px;
   gap: 18px;
   padding: 22px;
-  max-width: 1300px;
+  max-width: calc(100vw - 100px);
+  width: 100%;
   margin: 18px auto;
   box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.layout-left,
+.layout-center,
+.layout-right {
+  overflow-x: hidden;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0; /* Importante per permettere shrink nel grid */
 }
 
 /* Responsive Design */

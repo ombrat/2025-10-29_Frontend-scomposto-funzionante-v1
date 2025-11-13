@@ -11,6 +11,7 @@ const BacktestPage = lazy(() => import('./pages/BacktestPage.jsx'));
 const PortfolioPage = lazy(() => import('./pages/PortfolioPage.jsx'));
 const AnalysisPage = lazy(() => import('./pages/AnalysisPage.jsx'));
 const HeatmapPage = lazy(() => import('./pages/HeatmapPage.jsx'));
+const UnifiedAnalysisPage = lazy(() => import('./pages/UnifiedAnalysisPage.jsx'));
 const NewsPage = lazy(() => import('./pages/NewsPage.jsx'));
 const AboutPage = lazy(() => import('./pages/AboutPage.jsx'));
 const BackendTestPage = lazy(() => import('./pages/BackendTestPage.jsx')); // Backend Connection Test
@@ -59,6 +60,11 @@ export default function App() {
               <Route path="/heatmap" element={
                 <ErrorBoundary>
                   <HeatmapPage />
+                </ErrorBoundary>
+              } />
+              <Route path="/unified" element={
+                <ErrorBoundary>
+                  <UnifiedAnalysisPage />
                 </ErrorBoundary>
               } />
               <Route path="/news" element={<NewsPage />} />

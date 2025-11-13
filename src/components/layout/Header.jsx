@@ -12,6 +12,7 @@ export default function Header() {
     { path: '/', label: 'Home', icon: '🏠' },
     { path: '/backtest', label: 'Backtest', icon: '📊' },
     { path: '/portfolio', label: 'Portfolio', icon: '💼' },
+    { path: '/unified', label: 'Analisi Unificata', icon: '🔥' },
     { path: '/analysis', label: 'Analisi', icon: '📈' },
     { path: '/heatmap', label: 'Heatmap', icon: '🌡️' },
     { path: '/news', label: 'News', icon: '📰' },

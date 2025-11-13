@@ -7,7 +7,7 @@ export default function DrawdownChart({ chartData, summary, selectedDrawdownPeri
   const containerRef = useRef(null);
   const { width: wrapperWidth } = useResizeObserver(containerRef);
   const computedWidth = Math.round(wrapperWidth || 700);
-  const WIDTH = Math.max(520, Math.min(1100, computedWidth));
+  const WIDTH = Math.max(520, Math.min(1800, computedWidth));
   const HEIGHT = Math.round(WIDTH * 0.5);
   const RIGHT_MARGIN = 48;
   const TOP_MARGIN = 48;

@@ -13,7 +13,7 @@ export default function CombinedPortfolioChart({ primaryResult, secondaryResult,
   const wrapperRef = useRef(null);
   const { width: wrapperWidth } = useResizeObserver(wrapperRef);
   const computedWidth = Math.round(wrapperWidth || 900);
-  const WIDTH = Math.max(720, Math.min(1200, computedWidth));
+  const WIDTH = Math.max(720, Math.min(1800, computedWidth));
   const HEIGHT = Math.round(WIDTH * 0.44);
   const RIGHT_MARGIN = 48;
   const TOP_MARGIN = 48;

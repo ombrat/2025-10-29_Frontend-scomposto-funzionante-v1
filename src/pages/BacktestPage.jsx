@@ -22,7 +22,10 @@ export default function BacktestPage() {
     <div style={{
       minHeight: 'calc(100vh - 120px)', // Sottrae header e footer
       display: 'flex',
-      flexDirection: 'column'
+      flexDirection: 'column',
+      maxWidth: 'calc(100vw - 200px)',
+      margin: '0 auto',
+      width: '100%'
     }}>
       {/* Header della pagina */}
       <div style={{

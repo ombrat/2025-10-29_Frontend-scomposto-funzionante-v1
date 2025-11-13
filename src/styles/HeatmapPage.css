@@ -2,9 +2,10 @@
 
 .heatmap-page {
   width: 100%;
-  max-width: 100%;
+  max-width: calc(100vw - 200px);
   overflow-x: hidden !important;
   box-sizing: border-box;
+  margin: 0 auto;
 }
 
 /* Panel wrapper - blocca espansione */

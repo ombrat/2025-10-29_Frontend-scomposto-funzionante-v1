@@ -12,9 +12,7 @@ export default function Header() {
     { path: '/', label: 'Home', icon: '🏠' },
     { path: '/backtest', label: 'Backtest', icon: '📊' },
     { path: '/portfolio', label: 'Portfolio', icon: '💼' },
-    { path: '/unified', label: 'Analisi Unificata', icon: '🔥' },
     { path: '/analysis', label: 'Analisi', icon: '📈' },
-    { path: '/heatmap', label: 'Heatmap', icon: '🌡️' },
     { path: '/news', label: 'News', icon: '📰' },
     { path: '/backend-test', label: 'Backend Test', icon: '🧪' },
     { path: '/about', label: 'About', icon: 'ℹ️' }
@@ -69,7 +67,7 @@ export default function Header() {
           gap: '30px',
           alignItems: 'center'
         }}>
-          {navItems.slice(1, 6).map((item) => (
+          {navItems.slice(1, 5).map((item) => (
             <Link
               key={item.path}
               to={item.path}

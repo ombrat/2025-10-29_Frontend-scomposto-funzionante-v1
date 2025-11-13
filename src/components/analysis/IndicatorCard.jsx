@@ -99,8 +99,44 @@ const IndicatorCard = ({
 
   return (
     <div className="card series-card">
-      {/* Indicator header compatto */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+      {/* Indicator header compatto - SEMPRE VISIBILE */}
+      <div 
+        onClick={() => onToggleExpand(categoryKey, indicator.id)}
+        style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '10px', 
+          cursor: 'pointer',
+          padding: '8px',
+          borderRadius: '8px',
+          background: isExpanded ? 'rgba(102, 187, 106, 0.05)' : 'transparent',
+          transition: 'all 0.2s ease'
+        }}
+        onMouseEnter={(e) => {
+          if (!isExpanded) {
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isExpanded) {
+            e.currentTarget.style.background = 'transparent';
+          }
+        }}
+      >
+        {/* Icona expand/collapse */}
+        <div style={{
+          color: config.color,
+          fontSize: '14px',
+          transition: 'transform 0.3s ease',
+          transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+          width: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          ▶
+        </div>
+        
         <div style={{
           width: '28px',
           height: '28px',
@@ -149,135 +185,123 @@ const IndicatorCard = ({
         </div>
       </div>
 
-      {/* Grafico storico ampio */}
-      <IndicatorChart 
-        data={observations} 
-        color={config.color}
-        height={280}
-        indicator={indicator}
-      />
-
-      {/* Dati con scroll */}
-      <div style={{ marginBottom: '8px' }}>
+      {/* CONTENUTO ESPANDIBILE - Mostra solo se isExpanded è true */}
+      {isExpanded && (
         <div style={{ 
-          color: '#cfcfcf', 
-          fontSize: '12px', 
-          marginBottom: '6px',
-          fontWeight: '600'
+          marginTop: '12px',
+          paddingTop: '12px',
+          borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+          animation: 'fadeIn 0.3s ease'
         }}>
-          {isExpanded 
-            ? `Storico completo (${allHistoricalData.length} dati)`
-            : `Ultimi movimenti (${allHistoricalData.length} dati)`
-          }
-        </div>
-        
-        {/* Finestra con scroll */}
-        <div className="historical-data" style={{
-          height: isExpanded ? '200px' : '125px',
-          overflowY: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '3px',
-          border: '1px solid rgba(255, 255, 255, 0.05)',
-          borderRadius: '6px',
-          padding: '4px'
-        }}>
-          {allHistoricalData.map((obs, index) => (
-            <div 
-              key={`${obs.date}_${index}`}
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '4px 6px',
-                background: 'rgba(255, 255, 255, 0.02)',
-                borderRadius: '3px',
-                fontSize: '12px',
-                minHeight: '24px'
-              }}
-            >
-              <span style={{ color: '#cfcfcf', fontFamily: 'monospace', fontSize: '11px' }}>
-                {obs.date}
-              </span>
-              <span style={{ color: '#fff', fontWeight: '600' }}>
-                {formatValue(obs.value, indicator)}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
+          {/* Grafico storico ampio */}
+          <IndicatorChart 
+            data={observations} 
+            color={config.color}
+            height={280}
+            indicator={indicator}
+          />
 
-      {/* Controls */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        paddingTop: '6px',
-        borderTop: '1px solid rgba(255, 255, 255, 0.05)'
-      }}>
-        <span style={{ color: '#cfcfcf', fontSize: '11px' }}>
-          {observations.length} tot • {allHistoricalData.length} mostrati
-        </span>
-        
-        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-          {/* Confronta */}
-          <Button
-            onClick={() => onStartCompare(indicator)}
-            style={{
-              padding: '3px 8px',
-              fontSize: '11px',
-              minWidth: 'auto',
-              background: 'rgba(255, 152, 0, 0.1)',
-              border: '1px solid rgba(255, 152, 0, 0.3)',
-              color: '#ff9800'
-            }}
-            title={`Confronta ${indicator.name} con altro indicatore`}
-          >
-            ⚖️ Confronta
-          </Button>
-          
-          {/* Download CSV */}
-          <Button
-            onClick={() => downloadIndicatorCSV(indicator, categoryName)}
-            style={{
-              padding: '3px 8px',
-              fontSize: '11px',
-              minWidth: 'auto',
-              background: 'rgba(66, 165, 245, 0.1)',
-              border: '1px solid rgba(66, 165, 245, 0.3)',
-              color: '#42a5f5'
-            }}
-            title={`Scarica ${indicator.name} in CSV`}
-          >
-            📥 CSV
-          </Button>
-          
-          {/* Storico completo */}
-          {hasMoreData && (
-            <Button
-              onClick={() => onToggleExpand(categoryKey, indicator.id)}
-              style={{
-                padding: '3px 8px',
-                fontSize: '11px',
-                minWidth: 'auto',
-                background: isExpanded 
-                  ? 'rgba(239, 83, 80, 0.1)' 
-                  : 'rgba(102, 187, 106, 0.1)',
-                border: `1px solid ${isExpanded ? 'rgba(239, 83, 80, 0.3)' : 'rgba(102, 187, 106, 0.3)'}`,
-                color: isExpanded ? '#ef5350' : '#66bb6a'
-              }}
-            >
-              {isExpanded ? '📋 Solo recenti' : `📊 Storico (${observations.length})`}
-            </Button>
-          )}
+          {/* Dati con scroll */}
+          <div style={{ marginBottom: '8px', marginTop: '12px' }}>
+            <div style={{ 
+              color: '#cfcfcf', 
+              fontSize: '12px', 
+              marginBottom: '6px',
+              fontWeight: '600'
+            }}>
+              Storico completo ({observations.length} dati)
+            </div>
+            
+            {/* Finestra con scroll */}
+            <div className="historical-data" style={{
+              height: '200px',
+              overflowY: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '3px',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              borderRadius: '6px',
+              padding: '4px'
+            }}>
+              {[...observations].reverse().map((obs, index) => (
+                <div 
+                  key={`${obs.date}_${index}`}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '4px 6px',
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    borderRadius: '3px',
+                    fontSize: '12px',
+                    minHeight: '24px'
+                  }}
+                >
+                  <span style={{ color: '#cfcfcf', fontFamily: 'monospace', fontSize: '11px' }}>
+                    {obs.date}
+                  </span>
+                  <span style={{ color: '#fff', fontWeight: '600' }}>
+                    {formatValue(obs.value, indicator)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Controls */}
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            paddingTop: '6px',
+            borderTop: '1px solid rgba(255, 255, 255, 0.05)'
+          }}>
+            <span style={{ color: '#cfcfcf', fontSize: '11px' }}>
+              {observations.length} osservazioni totali
+            </span>
+            
+            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+              {/* Confronta */}
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onStartCompare(indicator);
+                }}
+                style={{
+                  padding: '3px 8px',
+                  fontSize: '11px',
+                  minWidth: 'auto',
+                  background: 'rgba(255, 152, 0, 0.1)',
+                  border: '1px solid rgba(255, 152, 0, 0.3)',
+                  color: '#ff9800'
+                }}
+                title={`Confronta ${indicator.name} con altro indicatore`}
+              >
+                ⚖️ Confronta
+              </Button>
+              
+              {/* Download CSV */}
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  downloadIndicatorCSV(indicator, categoryName);
+                }}
+                style={{
+                  padding: '3px 8px',
+                  fontSize: '11px',
+                  minWidth: 'auto',
+                  background: 'rgba(66, 165, 245, 0.1)',
+                  border: '1px solid rgba(66, 165, 245, 0.3)',
+                  color: '#42a5f5'
+                }}
+                title={`Scarica ${indicator.name} in CSV`}
+              >
+                📥 CSV
+              </Button>
+            </div>
+          </div>
         </div>
-        
-        {!hasMoreData && allHistoricalData.length > 5 && (
-          <span style={{ color: '#ffa726', fontSize: '11px' }}>
-            📜 Scroll per vedere tutti
-          </span>
-        )}
-      </div>
+      )}
     </div>
   );
 };

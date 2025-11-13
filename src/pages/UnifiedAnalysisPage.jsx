@@ -18,6 +18,7 @@ import CustomIndicators from '../components/analysis/CustomIndicators.jsx';
 import '../styles/index.css';
 import '../styles/components.css';
 import '../styles/HeatmapPage.css';
+import '../styles/HeatmapPage-dark.css';
 
 /**
  * 🔥 UnifiedAnalysisPage - Combina Heatmap + Analisi
@@ -75,18 +76,40 @@ export default function UnifiedAnalysisPage() {
       if (region === 'USA') {
         result = await macroService.fetchMacroDataComplete();
       } else {
+        // EU: Carica BCE + Eurostat e merge categorie
         const [ecbData, eurostatData] = await Promise.all([
-          ecbService.fetchEcbDataComplete(),
-          eurostatService.fetchEurostatDataComplete()
+          ecbService.fetchMacroDataComplete(),
+          eurostatService.fetchMacroDataComplete()
         ]);
         
+        // Merge categorie: combina indicatori da BCE e Eurostat per ogni categoria
+        const mergedIndicators = {};
+        
+        // Prima aggiungi tutti gli indicatori BCE
+        if (ecbData.indicators) {
+          Object.entries(ecbData.indicators).forEach(([category, indicators]) => {
+            if (!mergedIndicators[category]) {
+              mergedIndicators[category] = [];
+            }
+            mergedIndicators[category].push(...indicators);
+          });
+        }
+        
+        // Poi aggiungi gli indicatori Eurostat
+        if (eurostatData.indicators) {
+          Object.entries(eurostatData.indicators).forEach(([category, indicators]) => {
+            if (!mergedIndicators[category]) {
+              mergedIndicators[category] = [];
+            }
+            mergedIndicators[category].push(...indicators);
+          });
+        }
+        
         result = {
-          data: {
-            'BCE': ecbData.data?.['BCE'] || [],
-            'Eurostat': eurostatData.data?.['Eurostat'] || []
-          },
+          indicators: mergedIndicators,
           metadata: {
-            lastUpdate: new Date().toISOString()
+            lastUpdate: new Date().toISOString(),
+            sources: ['BCE', 'Eurostat']
           }
         };
       }
@@ -130,17 +153,38 @@ export default function UnifiedAnalysisPage() {
       } else {
         addLog('🇪🇺 Caricamento indicatori EU (BCE + Eurostat)...');
         const [ecbData, eurostatData] = await Promise.all([
-          ecbService.fetchEcbDataComplete(),
-          eurostatService.fetchEurostatDataComplete()
+          ecbService.fetchMacroDataComplete(),
+          eurostatService.fetchMacroDataComplete()
         ]);
         
+        // Merge categorie: combina indicatori da BCE e Eurostat per ogni categoria
+        const mergedIndicators = {};
+        
+        // Prima aggiungi tutti gli indicatori BCE
+        if (ecbData.indicators) {
+          Object.entries(ecbData.indicators).forEach(([category, indicators]) => {
+            if (!mergedIndicators[category]) {
+              mergedIndicators[category] = [];
+            }
+            mergedIndicators[category].push(...indicators);
+          });
+        }
+        
+        // Poi aggiungi gli indicatori Eurostat
+        if (eurostatData.indicators) {
+          Object.entries(eurostatData.indicators).forEach(([category, indicators]) => {
+            if (!mergedIndicators[category]) {
+              mergedIndicators[category] = [];
+            }
+            mergedIndicators[category].push(...indicators);
+          });
+        }
+        
         result = {
-          data: {
-            ...ecbData.data,
-            ...eurostatData.data
-          },
+          indicators: mergedIndicators,
           metadata: {
-            lastUpdate: new Date().toISOString()
+            lastUpdate: new Date().toISOString(),
+            sources: ['BCE', 'Eurostat']
           }
         };
       }
@@ -175,9 +219,166 @@ export default function UnifiedAnalysisPage() {
 
   const detectDataFrequency = (observations) => {
     if (!observations || observations.length === 0) return 'monthly';
-    const hasQuarterly = observations.some(d => d && d.includes && d.includes('-Q'));
+    const hasQuarterly = observations.some(obs => obs && obs.date && obs.date.includes('-Q'));
     return hasQuarterly ? 'quarterly' : 'monthly';
   };
+
+  const calculateValueForPeriod = (indicator, period) => {
+    const observations = indicator.observations;
+    if (!observations || observations.length === 0) return null;
+
+    const frequency = detectDataFrequency(observations);
+    let targetDates = [];
+    
+    if (period.month !== undefined) {
+      const monthStr = String(period.month + 1).padStart(2, '0');
+      
+      if (frequency === 'quarterly') {
+        const monthNum = period.month + 1;
+        const isQuarterEndMonth = monthNum % 3 === 0;
+        if (!isQuarterEndMonth) return null;
+        
+        const quarter = Math.ceil(monthNum / 3);
+        targetDates = [`${period.year}-Q${quarter}`];
+      } else {
+        targetDates = [
+          `${period.year}-${monthStr}-01`,
+          `${period.year}-${monthStr}`
+        ];
+      }
+    } else if (period.quarter !== undefined) {
+      const firstMonthOfQuarter = (period.quarter - 1) * 3 + 1;
+      targetDates = [
+        `${period.year}-Q${period.quarter}`,
+        `${period.year}-${String(firstMonthOfQuarter).padStart(2, '0')}-01`
+      ];
+    }
+    
+    let matchingObs = null;
+    for (const targetDate of targetDates) {
+      matchingObs = observations.find(obs => obs && obs.date && obs.date.trim() === targetDate);
+      if (matchingObs) break;
+    }
+
+    if (!matchingObs || matchingObs.value === '.' || matchingObs.value === null) {
+      return null;
+    }
+
+    const value = parseFloat(matchingObs.value);
+    if (isNaN(value)) return null;
+
+    const currentIndex = observations.findIndex(obs => obs.date === matchingObs.date);
+    let previousValue = null;
+    let changePercent = null;
+    
+    if (currentIndex > 0) {
+      for (let i = currentIndex - 1; i >= 0; i--) {
+        const prevObs = observations[i];
+        if (prevObs.value && prevObs.value !== '.') {
+          previousValue = parseFloat(prevObs.value);
+          if (!isNaN(previousValue) && previousValue !== 0) {
+            const change = value - previousValue;
+            changePercent = (change / previousValue) * 100;
+            break;
+          }
+        }
+      }
+    }
+
+    return { value, previousValue, changePercent, date: matchingObs.date };
+  };
+
+  const getCellColor = (cellData, indicator) => {
+    if (!cellData || cellData.changePercent === null || cellData.changePercent === undefined) {
+      return 'rgba(100, 116, 139, 0.1)';
+    }
+
+    const change = cellData.changePercent;
+    
+    const inverseIndicatorsUSA = [
+      'UNRATE', 'ICSA', 'CPIAUCSL', 'CPILFESL', 'PPIACO', 'DRCCLACBS'
+    ];
+    
+    const inverseIndicatorsEU = [
+      'UNEMPLOYMENT_EA', 'HICP_EA', 'HICP_CORE', 'HICP_ENERGY', 'HICP_FOOD',
+      'PPI_EA', 'HICP_ENERGY_EA', 'HICP_FOOD_EA', 'HICP_CORE_EA'
+    ];
+    
+    const isInverse = region === 'USA' 
+      ? inverseIndicatorsUSA.includes(indicator.id)
+      : inverseIndicatorsEU.includes(indicator.id);
+    
+    const isGoodChange = isInverse ? change < 0 : change > 0;
+    
+    const absChange = Math.abs(change);
+    let intensity;
+    
+    if (absChange < 0.5) intensity = 0.2;
+    else if (absChange < 1) intensity = 0.35;
+    else if (absChange < 2) intensity = 0.5;
+    else if (absChange < 5) intensity = 0.7;
+    else intensity = 0.9;
+    
+    if (isGoodChange) {
+      return `rgba(34, 197, 94, ${intensity})`;
+    } else {
+      return `rgba(239, 68, 68, ${intensity})`;
+    }
+  };
+
+  const toggleRowExpansion = (rowId) => {
+    setExpandedRows(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(rowId)) {
+        newSet.delete(rowId);
+      } else {
+        newSet.add(rowId);
+      }
+      return newSet;
+    });
+  };
+
+  // Funzione per navigare all'indicatore nella sezione analisi
+  const navigateToIndicator = (indicatorId, categoryKey) => {
+    // Scrolla alla sezione analisi
+    const analysisSection = document.querySelector('.panel:nth-child(2)'); // Seconda sezione panel
+    if (analysisSection) {
+      analysisSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    
+    // Chiudi tutti gli indicatori prima
+    setExpandedIndicators({});
+    
+    // Espandi solo la categoria selezionata (chiudi le altre)
+    setTimeout(() => {
+      setExpandedCategories({
+        [categoryKey]: true
+      });
+      
+      // Dopo aver espanso la categoria, espandi SOLO l'indicatore specifico
+      setTimeout(() => {
+        const key = `${categoryKey}_${indicatorId}`;
+        setExpandedIndicators({
+          [key]: true
+        });
+        
+        // Evidenzia l'indicatore
+        setTimeout(() => {
+          const indicatorElement = document.getElementById(`indicator-${categoryKey}-${indicatorId}`);
+          if (indicatorElement) {
+            indicatorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            indicatorElement.style.transition = 'background-color 0.3s';
+            indicatorElement.style.backgroundColor = 'rgba(102, 187, 106, 0.2)';
+            setTimeout(() => {
+              indicatorElement.style.backgroundColor = '';
+            }, 2000);
+          }
+        }, 100);
+      }, 400);
+    }, 500);
+  };
+
+  // ====================
 
   const generatePeriods = (mode, years) => {
     const periods = [];
@@ -213,118 +414,67 @@ export default function UnifiedAnalysisPage() {
     return periods.reverse();
   };
 
-  const getValueForPeriod = (indicator, period) => {
-    if (!indicator.observations || indicator.observations.length === 0) return null;
+  const heatmapProcessedData = React.useMemo(() => {
+    if (!heatmapData || !heatmapData.indicators) return null;
 
-    const frequency = detectDataFrequency(indicator.observations);
-    
-    let targetDates = [];
-    
-    if (frequency === 'quarterly') {
-      const monthNum = period.month + 1;
-      const isQuarterEndMonth = monthNum % 3 === 0;
-      if (!isQuarterEndMonth) return null;
-      
-      const quarter = Math.ceil(monthNum / 3);
-      targetDates = [`${period.year}-Q${quarter}`];
-    } else {
-      const monthStr = String(period.month + 1).padStart(2, '0');
-      targetDates = [
-        `${period.year}-${monthStr}-01`,
-        `${period.year}-${monthStr}`,
-        `${period.year}-Q${Math.ceil((period.month + 1) / 3)}`
-      ];
-    }
+    const allIndicators = [];
+    const categories = heatmapData.indicators;
 
-    for (const targetDate of targetDates) {
-      const idx = indicator.observations.findIndex(obs => obs === targetDate);
-      if (idx !== -1 && indicator.values[idx] != null) {
-        return indicator.values[idx];
-      }
-    }
-
-    return null;
-  };
-
-  const getCellColor = (currentValue, previousValue) => {
-    if (currentValue === null || previousValue === null) return '#2a2a2a';
-    
-    const change = ((currentValue - previousValue) / Math.abs(previousValue)) * 100;
-    
-    if (Math.abs(change) < 0.1) return '#3a3a3a';
-    
-    const intensity = Math.min(Math.abs(change) / 5, 1);
-    
-    if (change > 0) {
-      const r = Math.round(76 + (163 * intensity));
-      const g = Math.round(175 + (80 * intensity));
-      const b = Math.round(80 + (75 * intensity));
-      return `rgb(${r}, ${g}, ${b})`;
-    } else {
-      const r = Math.round(239 + (16 * intensity));
-      const g = Math.round(83 + (172 * intensity));
-      const b = Math.round(80 + (175 * intensity));
-      return `rgb(${r}, ${g}, ${b})`;
-    }
-  };
-
-  const processHeatmapData = () => {
-    if (!heatmapData?.indicators) return [];
-
-    const periods = generatePeriods(viewMode, yearsToShow);
-    const rows = [];
-
-    Object.entries(heatmapData.indicators).forEach(([categoryKey, indicators]) => {
-      if (!indicators || indicators.length === 0) return;
-
-      indicators.forEach(indicator => {
-        const rowData = {
-          id: indicator.id,
-          name: indicator.name,
-          category: categoryKey,
-          categoryLabel: categoryKey,
-          units: indicator.units || '',
-          link: indicator.link || null,
-          cells: []
-        };
-
-        let previousValue = null;
-        periods.forEach(period => {
-          const currentValue = getValueForPeriod(indicator, period);
-          const color = previousValue !== null ? getCellColor(currentValue, previousValue) : '#2a2a2a';
-          
-          rowData.cells.push({
-            value: currentValue,
-            color: color,
-            period: period.fullLabel
+    Object.keys(categories).forEach(categoryKey => {
+      categories[categoryKey].forEach(indicator => {
+        if (indicator.observations && indicator.observations.length > 0) {
+          allIndicators.push({
+            ...indicator,
+            categoryKey
           });
-
-          if (currentValue !== null) {
-            previousValue = currentValue;
-          }
-        });
-
-        rows.push(rowData);
+        }
       });
     });
 
-    return rows.filter(row => {
+    const periods = generatePeriods(viewMode, yearsToShow);
+
+    const rows = allIndicators.map(indicator => {
+      const values = periods.map(period => {
+        return calculateValueForPeriod(indicator, period);
+      });
+
+      return {
+        id: indicator.id,
+        name: indicator.name,
+        description: indicator.description,
+        category: indicator.categoryKey,
+        categoryLabel: indicator.categoryKey === 'employment' ? 'Mondo del Lavoro' :
+                       indicator.categoryKey === 'growth' ? 'Crescita Economica' :
+                       indicator.categoryKey === 'stability' ? 'Solidità Economica' : indicator.categoryKey,
+        values,
+        units: indicator.units
+      };
+    });
+
+    const categoryOrder = ['employment', 'growth', 'stability'];
+    rows.sort((a, b) => {
+      const orderA = categoryOrder.indexOf(a.category);
+      const orderB = categoryOrder.indexOf(b.category);
+      return orderA - orderB;
+    });
+
+    const filteredRows = rows.filter(row => {
       if (!searchFilter.trim()) return true;
       const search = searchFilter.toLowerCase();
       return row.name.toLowerCase().includes(search) || 
-             row.id.toLowerCase().includes(search);
+             row.id.toLowerCase().includes(search) ||
+             row.categoryLabel.toLowerCase().includes(search);
     });
-  };
 
-  const filteredHeatmapRows = processHeatmapData();
-  const periods = generatePeriods(viewMode, yearsToShow);
+    return {
+      periods,
+      rows: filteredRows
+    };
+  }, [heatmapData, viewMode, yearsToShow, searchFilter, region]);
 
   // ====================
   // ANALYSIS LOGIC
   // ====================
-
-  // (Copio tutta la logica da AnalysisPage - search, custom indicators, compare, etc.)
-  // Per brevità mostro solo la struttura principale
 
   const allAvailableIndicators = React.useMemo(() => {
     if (!macroData?.indicators) return [];
@@ -350,10 +500,12 @@ export default function UnifiedAnalysisPage() {
 
     try {
       let results = [];
+      let error = null;
       
       if (region === 'USA') {
         const fredSearch = await macroService.searchFredSeries(searchText);
         results = fredSearch.results;
+        error = fredSearch.error;
       } else {
         const [ecbSearch, eurostatSearch] = await Promise.all([
           ecbService.searchEcbSeries(searchText),
@@ -364,9 +516,30 @@ export default function UnifiedAnalysisPage() {
           ...(ecbSearch.results || []),
           ...(eurostatSearch.results || [])
         ];
+        error = ecbSearch.error || eurostatSearch.error;
       }
 
-      setSearchResults(results || []);
+      if (error) {
+        setSearchError(error);
+        setSearchResults([]);
+        return;
+      }
+      
+      if (results && results.length > 0) {
+        const existingIds = allAvailableIndicators.map(ind => ind.id);
+        const newResults = results.filter(series => 
+          !existingIds.includes(series.id) && !customIndicators[series.id]
+        );
+        
+        setSearchResults(newResults);
+        
+        if (newResults.length === 0 && results.length > 0) {
+          setSearchError('Tutti i risultati sono già presenti nella pagina');
+        }
+      } else {
+        setSearchResults([]);
+        setSearchError('Nessun risultato trovato');
+      }
     } catch (error) {
       console.error('Errore ricerca:', error);
       setSearchError(error.message);
@@ -386,24 +559,23 @@ export default function UnifiedAnalysisPage() {
 
   const addCustomIndicator = async (series) => {
     try {
-      setLoadingLogs(prev => [...prev.slice(-8), `⏳ Caricamento ${series.id}...`]);
+      setLoadingLogs(prev => [...prev.slice(-8), `⏳ Caricamento ${series.id}: ${series.title}...`]);
       
-      let seriesData;
-      if (region === 'USA') {
-        seriesData = await macroService.getSingleSeries(series.id);
-      } else {
-        // Per EU, usa il servizio appropriato basato sulla fonte
-        if (series.source === 'ECB') {
-          seriesData = await ecbService.getSingleSeries(series.id);
-        } else {
-          seriesData = await eurostatService.getSingleSeries(series.id);
-        }
-      }
+      const { default: backendService } = await import('../services/backendService.js');
+      const data = await backendService.getFredSeriesObservations(series.id, {
+        limit: 70 * 12,
+        sort_order: 'desc'
+      });
       
-      if (seriesData && !seriesData.error) {
+      if (data && data.observations) {
         const customIndicator = {
-          ...seriesData,
+          id: series.id,
+          name: series.title,
+          title: series.title,
+          description: series.notes || '',
+          observations: data.observations,
           category: 'custom',
+          isCustom: true,
           addedAt: Date.now()
         };
         
@@ -424,6 +596,15 @@ export default function UnifiedAnalysisPage() {
       console.error('Errore aggiunta indicatore:', error);
       setLoadingLogs(prev => [...prev.slice(-8), `❌ Errore caricando ${series.id}: ${error.message}`]);
     }
+  };
+
+  const removeCustomIndicator = (seriesId) => {
+    setCustomIndicators(prev => {
+      const newCustom = { ...prev };
+      delete newCustom[seriesId];
+      return newCustom;
+    });
+    setLoadingLogs(prev => [...prev.slice(-8), `🗑️ ${seriesId} rimosso`]);
   };
 
   const getTotalFilteredResults = () => {
@@ -561,7 +742,7 @@ export default function UnifiedAnalysisPage() {
             }}>
               <span>{region === 'USA' ? '📊' : '✅'}</span>
               <span>
-                {region === 'USA' ? '30 indicatori' : '23 indicatori'}
+                {region === 'USA' ? '30 indicatori' : '21 indicatori (BCE + Eurostat)'}
               </span>
             </div>
           )}
@@ -642,6 +823,10 @@ export default function UnifiedAnalysisPage() {
           <div style={{ textAlign: 'center', padding: '40px' }}>
             <p style={{ color: '#ef5350' }}>❌ {heatmapError}</p>
           </div>
+        ) : !heatmapProcessedData ? (
+          <div style={{ textAlign: 'center', padding: '40px' }}>
+            <p style={{ color: '#999' }}>Nessun dato disponibile</p>
+          </div>
         ) : (
           <div className="heatmap-container" style={{
             maxWidth: '100%',
@@ -660,7 +845,7 @@ export default function UnifiedAnalysisPage() {
                 <thead>
                   <tr>
                     <th className="indicator-column sticky-col">Indicatore</th>
-                    {periods.map((period, idx) => (
+                    {heatmapProcessedData.periods.map((period, idx) => (
                       <th key={idx} title={period.fullLabel}>
                         {period.label}
                       </th>
@@ -668,54 +853,149 @@ export default function UnifiedAnalysisPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredHeatmapRows.length === 0 ? (
+                  {heatmapProcessedData.rows.length === 0 ? (
                     <tr>
-                      <td colSpan={periods.length + 1} style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
-                        Nessun indicatore trovato
+                      <td colSpan={heatmapProcessedData.periods.length + 1} className="no-results">
+                        {searchFilter.trim() ? (
+                          <>
+                            🔍 Nessun risultato trovato per "<strong>{searchFilter}</strong>"
+                            <br />
+                            <button 
+                              className="clear-search-btn"
+                              onClick={() => setSearchFilter('')}
+                            >
+                              ✕ Cancella ricerca
+                            </button>
+                          </>
+                        ) : (
+                          'Nessun dato disponibile'
+                        )}
                       </td>
                     </tr>
                   ) : (
-                    filteredHeatmapRows.map((row) => (
-                      <tr key={row.id}>
-                        <td className="sticky-col" style={{ 
-                          minWidth: '200px',
-                          fontWeight: '600',
-                          fontSize: '0.85rem'
-                        }}>
-                          <div>
-                            {row.link ? (
-                              <a href={row.link} target="_blank" rel="noopener noreferrer" 
-                                 style={{ color: '#667eea', textDecoration: 'none' }}>
-                                {row.name}
-                              </a>
-                            ) : (
-                              <span>{row.name}</span>
-                            )}
-                            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '2px' }}>
-                              {row.units}
-                            </div>
-                          </div>
-                        </td>
-                        {row.cells.map((cell, idx) => (
-                          <td 
-                            key={idx} 
-                            className="value-cell"
-                            style={{ 
-                              backgroundColor: cell.color,
-                              color: '#fff',
-                              fontWeight: '600'
-                            }}
-                            title={`${cell.period}: ${cell.value !== null ? cell.value.toFixed(2) : 'N/A'}`}
+                    heatmapProcessedData.rows.map((row, rowIdx) => {
+                      const isFirstInCategory = rowIdx === 0 || heatmapProcessedData.rows[rowIdx - 1].category !== row.category;
+                    
+                      return (
+                        <React.Fragment key={row.id}>
+                          {/* Header categoria */}
+                          {isFirstInCategory && (
+                            <tr className="category-header-row">
+                              <td colSpan={heatmapProcessedData.periods.length + 1} className="category-header">
+                                <span className="category-icon">
+                                  {row.category === 'employment' ? '👥' : 
+                                   row.category === 'growth' ? '📈' : 
+                                   row.category === 'stability' ? '🛡️' : '📊'}
+                                </span>
+                                {row.categoryLabel}
+                              </td>
+                            </tr>
+                          )}
+                          
+                          {/* Riga principale */}
+                          <tr 
+                            className={expandedRows.has(row.id) ? 'expanded-row' : ''}
+                            onClick={() => toggleRowExpansion(row.id)}
+                            style={{ cursor: 'pointer' }}
                           >
-                            {cell.value !== null ? cell.value.toFixed(2) : '-'}
-                          </td>
-                        ))}
-                      </tr>
-                    ))
+                            <td className="indicator-column sticky-col" title={row.name}>
+                              <div className="indicator-cell">
+                                <span className="expand-icon">
+                                  {expandedRows.has(row.id) ? '▼' : '▶'}
+                                </span>
+                                <span
+                                  className="indicator-name-link"
+                                  style={{ cursor: 'pointer' }}
+                                  title={`Vai a ${row.name} nella sezione Analisi`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigateToIndicator(row.id, row.category);
+                                  }}
+                                >
+                                  {row.name}
+                                </span>
+                                {row.units && <span className="indicator-units">{row.units}</span>}
+                                {/* Info tooltip */}
+                                <div className="info-tooltip-wrapper" onClick={(e) => e.stopPropagation()}>
+                                  <span className="info-icon">i</span>
+                                  <div className="info-tooltip">
+                                    <strong>{row.name}</strong>
+                                    <p>{row.description || 'Nessuna descrizione disponibile'}</p>
+                                    <small>Serie {region === 'USA' ? 'FRED' : 'ECB/Eurostat'}: {row.id}</small>
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            {row.values.map((cellData, colIdx) => (
+                              <td
+                                key={colIdx}
+                                className="value-cell"
+                                style={{ 
+                                  backgroundColor: getCellColor(cellData, row),
+                                  color: cellData && cellData.changePercent !== null ? '#000' : '#999'
+                                }}
+                                title={cellData ? `${row.name}: ${cellData.value?.toFixed(2)} (${cellData.date})` : 'N/A'}
+                              >
+                                {cellData ? cellData.value?.toFixed(2) : '—'}
+                              </td>
+                            ))}
+                          </tr>
+                          
+                          {/* Riga secondaria con variazioni percentuali */}
+                          {expandedRows.has(row.id) && (
+                            <tr className="detail-row">
+                              <td className="indicator-column sticky-col detail-label">
+                                <span className="variation-label">Δ% vs precedente</span>
+                              </td>
+                              {row.values.map((cellData, colIdx) => (
+                                <td
+                                  key={colIdx}
+                                  className="value-cell detail-cell"
+                                  style={{ 
+                                    backgroundColor: getCellColor(cellData, row),
+                                    color: cellData && cellData.changePercent !== null ? '#000' : '#999'
+                                  }}
+                                >
+                                  {cellData && cellData.changePercent !== null ? (
+                                    <>
+                                      {cellData.changePercent > 0 ? '↑' : cellData.changePercent < 0 ? '↓' : '→'}
+                                      {cellData.changePercent >= 0 ? '+' : ''}
+                                      {cellData.changePercent.toFixed(2)}%
+                                    </>
+                                  ) : '—'}
+                                </td>
+                              ))}
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {/* Footer informativo */}
+        {!heatmapLoading && !heatmapError && heatmapProcessedData && (
+          <div style={{ 
+            marginTop: '15px', 
+            padding: '12px', 
+            background: 'rgba(255,255,255,0.03)',
+            borderRadius: '6px',
+            fontSize: '12px',
+            color: '#999'
+          }}>
+            <p>
+              <strong>Fonte dati:</strong> {region === 'USA' 
+                ? 'Federal Reserve Economic Data (FRED) via Google Cloud Run'
+                : 'ECB Statistical Data Warehouse + Eurostat via Google Cloud Run'}
+            </p>
+            <p style={{ marginTop: '6px' }}>
+              <strong>Nota:</strong> I colori rappresentano la variazione percentuale rispetto al periodo precedente.
+              Verde = crescita, Rosso = decrescita. Per indicatori come disoccupazione, inflazione e volatilità, i colori sono invertiti.
+            </p>
           </div>
         )}
       </div>
@@ -775,6 +1055,45 @@ export default function UnifiedAnalysisPage() {
           </div>
         ) : (
           <>
+            {/* Banner informativo disponibilità dati */}
+            {!analysisLoading && macroData && (
+              <div style={{
+                background: region === 'USA' 
+                  ? 'linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05))'
+                  : 'linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 193, 7, 0.05))',
+                border: region === 'USA' 
+                  ? '1px solid rgba(33, 150, 243, 0.3)'
+                  : '1px solid rgba(255, 193, 7, 0.3)',
+                borderRadius: '8px',
+                padding: '12px 16px',
+                marginBottom: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
+                <span style={{ fontSize: '20px' }}>
+                  {region === 'USA' ? '📊' : 'ℹ️'}
+                </span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ 
+                    color: '#fff', 
+                    fontSize: '13px', 
+                    fontWeight: '600',
+                    marginBottom: '3px'
+                  }}>
+                    {region === 'USA' 
+                      ? '🇺🇸 Database USA Completo'
+                      : '🇪🇺 Database Eurozona'}
+                  </div>
+                  <div style={{ color: '#bbb', fontSize: '12px', lineHeight: '1.4' }}>
+                    {region === 'USA' 
+                      ? `30 indicatori con 70 anni di storia | ${Object.values(macroData.indicators || {}).flat().length} serie disponibili`
+                      : `21 indicatori verificati disponibili (6 BCE + 15 Eurostat) | Dati storici completi da fonti ufficiali`}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Ricerca & Confronto */}
             <AnalysisSearch
               searchTerm={searchTerm}
@@ -792,16 +1111,19 @@ export default function UnifiedAnalysisPage() {
             />
 
             {/* Sezione Confronto */}
-            {showCompareChart && (
+            {showCompareChart && primaryIndicator && (
               <CompareSection
-                primaryIndicator={primaryIndicator}
+                primary={primaryIndicator}
                 compareIndicator={compareIndicator}
-                setPrimaryIndicator={setPrimaryIndicator}
-                setCompareIndicator={setCompareIndicator}
-                setShowCompareChart={setShowCompareChart}
-                allAvailableIndicators={allAvailableIndicators}
-                customIndicators={customIndicators}
-                region={region}
+                onSelectCompareIndicator={(indicator) => setCompareIndicator(indicator)}
+                onClose={() => {
+                  setShowCompareChart(false);
+                  setPrimaryIndicator(null);
+                  setCompareIndicator(null);
+                }}
+                allIndicators={allAvailableIndicators.filter(ind => ind.id !== primaryIndicator.id)}
+                macroData={macroData}
+                macroService={region === 'USA' ? macroService : ecbService}
               />
             )}
 
@@ -809,12 +1131,24 @@ export default function UnifiedAnalysisPage() {
             {Object.keys(customIndicators).length > 0 && (
               <CustomIndicators
                 customIndicators={customIndicators}
-                setCustomIndicators={setCustomIndicators}
+                searchTerm={searchTerm}
+                onRemoveIndicator={removeCustomIndicator}
+                onStartCompare={(indicator) => {
+                  setPrimaryIndicator(indicator);
+                  setShowCompareChart(true);
+                  setCompareIndicator(null);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
                 expandedIndicators={expandedIndicators}
-                setExpandedIndicators={setExpandedIndicators}
-                setPrimaryIndicator={setPrimaryIndicator}
-                setCompareIndicator={setCompareIndicator}
-                setShowCompareChart={setShowCompareChart}
+                onToggleIndicator={(categoryKey, indicatorId) => {
+                  const key = `${categoryKey}_${indicatorId}`;
+                  setExpandedIndicators(prev => ({
+                    ...prev,
+                    [key]: !prev[key]
+                  }));
+                }}
+                macroData={macroData}
+                macroService={region === 'USA' ? macroService : ecbService}
               />
             )}
 
@@ -824,16 +1158,50 @@ export default function UnifiedAnalysisPage() {
                 key={categoryKey}
                 categoryKey={categoryKey}
                 indicators={indicators}
-                expandedCategories={expandedCategories}
-                setExpandedCategories={setExpandedCategories}
+                isExpanded={expandedCategories[categoryKey]}
+                onToggleCategory={(key) => {
+                  setExpandedCategories(prev => ({
+                    ...prev,
+                    [key]: !prev[key]
+                  }));
+                }}
                 expandedIndicators={expandedIndicators}
-                setExpandedIndicators={setExpandedIndicators}
-                setPrimaryIndicator={setPrimaryIndicator}
-                setCompareIndicator={setCompareIndicator}
-                setShowCompareChart={setShowCompareChart}
-                region={region}
+                onToggleIndicator={(catKey, indicatorId) => {
+                  const key = `${catKey}_${indicatorId}`;
+                  setExpandedIndicators(prev => ({
+                    ...prev,
+                    [key]: !prev[key]
+                  }));
+                }}
+                onStartCompare={(indicator) => {
+                  setPrimaryIndicator(indicator);
+                  setShowCompareChart(true);
+                  setCompareIndicator(null);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                macroData={macroData}
+                macroService={region === 'USA' ? macroService : ecbService}
               />
             ))}
+
+            {/* Log panel sempre visibile */}
+            {loadingLogs.length > 0 && (
+              <div className="panel" style={{ marginTop: '20px' }}>
+                <div className="panel-title">🔄 Log di Sistema</div>
+                <div style={{ fontFamily: 'monospace', fontSize: '12px', maxHeight: '150px', overflowY: 'auto' }}>
+                  {loadingLogs.map((log, index) => (
+                    <div key={index} style={{ 
+                      color: '#cfcfcf', 
+                      marginBottom: '4px',
+                      paddingLeft: '10px',
+                      borderLeft: '2px solid #66bb6a'
+                    }}>
+                      {log}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>

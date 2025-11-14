@@ -13,6 +13,7 @@ export default function Header() {
     { path: '/backtest', label: 'Backtest', icon: '📊' },
     { path: '/portfolio', label: 'Portfolio', icon: '💼' },
     { path: '/analysis', label: 'Analisi', icon: '📈' },
+    { path: '/stocks', label: 'Azioni', icon: '🏦' },
     { path: '/news', label: 'News', icon: '📰' },
     { path: '/backend-test', label: 'Backend Test', icon: '🧪' },
     { path: '/about', label: 'About', icon: 'ℹ️' }
@@ -67,7 +68,7 @@ export default function Header() {
           gap: '30px',
           alignItems: 'center'
         }}>
-          {navItems.slice(1, 5).map((item) => (
+          {navItems.slice(1, 6).map((item) => (
             <Link
               key={item.path}
               to={item.path}

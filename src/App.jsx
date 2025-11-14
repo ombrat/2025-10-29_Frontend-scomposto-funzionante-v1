@@ -10,6 +10,7 @@ const HomePage = lazy(() => import('./pages/HomePage.jsx'));
 const BacktestPage = lazy(() => import('./pages/BacktestPage.jsx'));
 const PortfolioPage = lazy(() => import('./pages/PortfolioPage.jsx'));
 const UnifiedAnalysisPage = lazy(() => import('./pages/UnifiedAnalysisPage.jsx'));
+const StockAnalysisPage = lazy(() => import('./pages/StockAnalysisPage.jsx')); // Yahoo Finance Stock Analysis
 const NewsPage = lazy(() => import('./pages/NewsPage.jsx'));
 const AboutPage = lazy(() => import('./pages/AboutPage.jsx'));
 const BackendTestPage = lazy(() => import('./pages/BackendTestPage.jsx')); // Backend Connection Test
@@ -55,6 +56,7 @@ export default function App() {
                   <UnifiedAnalysisPage />
                 </ErrorBoundary>
               } />
+              <Route path="/stocks" element={<StockAnalysisPage />} />
               <Route path="/news" element={<NewsPage />} />
               <Route path="/backend-test" element={<BackendTestPage />} />
               <Route path="/about" element={<AboutPage />} />

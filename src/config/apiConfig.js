@@ -3,6 +3,9 @@ export const API_CONFIG = {
   // Backend principale su Google Cloud Run (FRED - USA)
   BACKEND_BASE_URL: 'https://fred-api-proxy-21722357706.europe-west1.run.app',
   
+  // Backend Backtest e Yahoo Finance su Google Cloud Run
+  BACKTEST_BACKEND_BASE_URL: 'https://backtest-server-final-453907803757.europe-west3.run.app',
+  
   // Backend ECB su Google Cloud Run (BCE - Eurozona)
   ECB_BACKEND_BASE_URL: 'https://ecb-proxy-21722357706.europe-west1.run.app',
   

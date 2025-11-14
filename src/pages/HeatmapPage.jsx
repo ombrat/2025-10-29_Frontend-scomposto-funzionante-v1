@@ -72,18 +72,99 @@ const HeatmapPage = () => {
           ];
         });
         
-        console.log(`🇪🇺 Heatmap EU: ECB (${Object.values(ecbData.indicators || {}).flat().length}) + Eurostat (${Object.values(eurostatData.indicators || {}).flat().length}) indicatori`);
+        console.log(`Heatmap EU: ECB (${Object.values(ecbData.indicators || {}).flat().length}) + Eurostat (${Object.values(eurostatData.indicators || {}).flat().length}) indicatori`);
       }
       
-      console.log(`📊 Dati ${region} caricati per heatmap:`, result);
+      console.log(`Dati ${region} caricati per heatmap:`, result);
       
       setData(result);
     } catch (err) {
-      console.error(`❌ Errore caricamento dati heatmap ${region}:`, err);
+      console.error(`Errore caricamento dati heatmap ${region}:`, err);
       setError(err.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  /**
+   * Abbrevia i nomi degli indicatori per la visualizzazione compatta
+   */
+  const abbreviateIndicatorName = (fullName) => {
+    // Abbreviazioni specifiche per indicatori comuni
+    const abbreviations = {
+      // USA - FRED
+      'Unemployment Rate': 'Disoccupaz.',
+      'Consumer Price Index': 'CPI',
+      'Producer Price Index': 'PPI',
+      'Real Gross Domestic Product': 'PIL Reale',
+      'Gross Domestic Product': 'PIL',
+      'Industrial Production Index': 'Prod. Ind.',
+      'Retail Sales': 'Vendite Det.',
+      'Housing Starts': 'Avvio Costruz.',
+      'Consumer Confidence': 'Fiducia Cons.',
+      'Federal Funds Rate': 'Tasso Fed',
+      'Initial Claims': 'Rich. Sussidi',
+      'Nonfarm Payrolls': 'Occupati',
+      'Total Vehicle Sales': 'Vendite Auto',
+      'Leading Economic Indicators': 'LEI',
+      'Manufacturing PMI': 'PMI Manif.',
+      'Services PMI': 'PMI Servizi',
+      'Personal Income': 'Reddito Pers.',
+      'Personal Consumption': 'Consumo Pers.',
+      'Credit Card Delinquency': 'Insolvenze CC',
+      
+      // EU - ECB/Eurostat
+      'Harmonised Index of Consumer Prices': 'HICP',
+      'Gross Domestic Product': 'PIL',
+      'Industrial Production': 'Produz. Ind.',
+      'Unemployment Rate': 'Disoccupaz.',
+      'Producer Price Index': 'PPI',
+      'Consumer Confidence': 'Fiducia Cons.',
+      'Business Confidence': 'Fiducia Imprese',
+      'Retail Trade': 'Commercio Det.',
+      'Money Supply': 'M3',
+      'Bank Interest Rate': 'Tasso BCE',
+      'Current Account Balance': 'Bilancia Corr.',
+      'Government Debt': 'Debito Pubb.'
+    };
+
+    // Controlla prima le abbreviazioni specifiche
+    if (abbreviations[fullName]) {
+      return abbreviations[fullName];
+    }
+
+    // Algoritmo di abbreviazione automatica
+    let abbreviated = fullName;
+
+    // Rimuovi tutte le emoji e simboli Unicode non alfabetici
+    abbreviated = abbreviated.replace(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '');
+
+    // Rimuovi parole comuni non essenziali
+    const wordsToRemove = [
+      'Index', 'Rate', 'Total', 'All', 'Real', 'Nominal', 'Seasonally Adjusted',
+      'Monthly', 'Annual', 'Quarterly', 'Average', 'Percent', 'Change',
+      'Level', 'Number', 'Value', 'Amount', 'Volume', 'Units'
+    ];
+    
+    wordsToRemove.forEach(word => {
+      abbreviated = abbreviated.replace(new RegExp(`\\b${word}\\b`, 'gi'), '');
+    });
+
+    // Rimuovi spazi multipli
+    abbreviated = abbreviated.replace(/\s+/g, ' ').trim();
+
+    // Se ancora troppo lungo, usa acronimo
+    if (abbreviated.length > 15) {
+      const words = abbreviated.split(' ');
+      if (words.length > 1) {
+        abbreviated = words.map(word => word.charAt(0).toUpperCase()).join('');
+      } else {
+        // Tronca se è una parola singola troppo lunga
+        abbreviated = abbreviated.substring(0, 12) + '...';
+      }
+    }
+
+    return abbreviated;
   };
 
   /**
@@ -372,8 +453,7 @@ const HeatmapPage = () => {
     
     if (changePercent !== null && changePercent !== undefined) {
       const sign = changePercent >= 0 ? '+' : '';
-      const arrow = changePercent > 0 ? '↑' : changePercent < 0 ? '↓' : '';
-      return `${formattedValue} ${arrow}${sign}${changePercent.toFixed(1)}%`;
+      return `${formattedValue} ${sign}${changePercent.toFixed(1)}%`;
     }
     
     return formattedValue;
@@ -431,7 +511,7 @@ const HeatmapPage = () => {
         center={
           <div className="panel">
             <div className="error-container">
-              <h2>❌ Errore</h2>
+              <h2>Errore</h2>
               <p>{error}</p>
               <Button onClick={loadData}>Riprova</Button>
             </div>
@@ -458,6 +538,23 @@ const HeatmapPage = () => {
   const { periods, rows } = heatmapData;
   const filteredRows = filterRows(rows);
 
+  // Raggruppa per categoria
+  const categorizedRows = useMemo(() => {
+    const grouped = {};
+    filteredRows.forEach(row => {
+      const cat = row.category || 'other';
+      if (!grouped[cat]) {
+        grouped[cat] = {
+          categoryKey: cat,
+          categoryLabel: row.categoryLabel || 'Altro',
+          rows: []
+        };
+      }
+      grouped[cat].rows.push(row);
+    });
+    return Object.values(grouped);
+  }, [filteredRows]);
+
   return (
     <MainLayout 
       center={
@@ -474,7 +571,7 @@ const HeatmapPage = () => {
             }}>
               <div style={{ flex: '0 0 auto' }}>
                 <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '600' }}>
-                  📊 Heatmap Indicatori
+                  Heatmap Indicatori
                 </h2>
               </div>
               
@@ -498,7 +595,7 @@ const HeatmapPage = () => {
                     fontWeight: region === 'USA' ? '600' : '400'
                   }}
                 >
-                  🇺🇸 USA
+                  USA
                 </Button>
                 <Button 
                   onClick={() => setRegion('EU')}
@@ -511,7 +608,7 @@ const HeatmapPage = () => {
                     fontWeight: region === 'EU' ? '600' : '400'
                   }}
                 >
-                  🇪🇺 EU
+                  EU
                 </Button>
               </div>
 
@@ -533,7 +630,6 @@ const HeatmapPage = () => {
                   color: '#fff',
                   fontWeight: '500'
                 }}>
-                  <span>{region === 'USA' ? '📊' : '✅'}</span>
                   <span>
                     {region === 'USA' ? '30 indicatori' : '23 indicatori'}
                   </span>
@@ -552,7 +648,7 @@ const HeatmapPage = () => {
               <div style={{ flex: '1 1 250px', minWidth: '200px', position: 'relative' }}>
                 <input
                   type="text"
-                  placeholder="🔍 Cerca indicatore..."
+                  placeholder="Cerca indicatore..."
                   value={searchFilter}
                   onChange={(e) => setSearchFilter(e.target.value)}
                   style={{
@@ -596,8 +692,8 @@ const HeatmapPage = () => {
                   cursor: 'pointer'
                 }}
               >
-                <option value="monthly">📅 Mensile</option>
-                <option value="quarterly">📊 Trimestrale</option>
+                <option value="monthly">Mensile</option>
+                <option value="quarterly">Trimestrale</option>
               </select>
 
               {/* Periodo */}
@@ -655,81 +751,88 @@ const HeatmapPage = () => {
                   border: '1px solid rgba(255,255,255,0.1)'
                 }}
               >
-                🔄
+                Aggiorna
               </Button>
             </div>
           </div>
 
-          {/* Tabella Heatmap */}
-          <div className="panel" style={{ 
-            maxWidth: '100%', 
-            overflow: 'hidden',
-            boxSizing: 'border-box'
-          }}>
-            <div className="heatmap-container" style={{
-              maxWidth: '100%',
-              overflow: 'hidden',
-              boxSizing: 'border-box'
-            }}>
-        <div className="heatmap-scroll" style={{
-          overflowX: 'auto',
-          overflowY: 'auto',
-          maxHeight: '70vh',
-          width: '100%',
-          maxWidth: '100%',
-          boxSizing: 'border-box'
-        }}>
-          <table className="heatmap-table">
-            <thead>
-              <tr>
-                <th className="indicator-column sticky-col">Indicatore</th>
-                {periods.map((period, idx) => (
-                  <th key={idx} title={period.fullLabel}>
-                    {period.label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filteredRows.length === 0 ? (
-                <tr>
-                  <td colSpan={periods.length + 1} className="no-results">
-                    {searchFilter.trim() ? (
-                      <>
-                        🔍 Nessun risultato trovato per "<strong>{searchFilter}</strong>"
-                        <br />
-                        <button 
-                          className="clear-search-btn"
-                          onClick={() => setSearchFilter('')}
-                        >
-                          ✕ Cancella ricerca
-                        </button>
-                      </>
-                    ) : (
-                      'Nessun dato disponibile'
-                    )}
-                  </td>
-                </tr>
-              ) : (
-                filteredRows.map((row, rowIdx) => {
-                  // Controlla se è la prima riga di una nuova categoria
-                  const isFirstInCategory = rowIdx === 0 || filteredRows[rowIdx - 1].category !== row.category;
-                
-                return (
-                  <React.Fragment key={row.id}>
-                    {/* Header categoria */}
-                    {isFirstInCategory && (
-                      <tr className="category-header-row">
-                        <td colSpan={periods.length + 1} className="category-header">
-                          <span className="category-icon">
-                            {row.category === 'employment' ? '👥' : 
-                             row.category === 'growth' ? '📈' : 
-                             row.category === 'stability' ? '🛡️' : '📊'}
-                          </span>
-                          {row.categoryLabel}
-                        </td>
-                      </tr>
-                    )}
+          {/* Sezioni Heatmap per Categoria */}
+          {categorizedRows.length === 0 ? (
+            <div className="panel">
+              <div className="no-results" style={{padding: '2rem', textAlign: 'center'}}>
+                {searchFilter.trim() ? (
+                  <>
+                    Nessun risultato trovato per "<strong>{searchFilter}</strong>"
+                    <br />
+                    <button 
+                      className="clear-search-btn"
+                      onClick={() => setSearchFilter('')}
+                      style={{marginTop: '1rem'}}
+                    >
+                      ✕ Cancella ricerca
+                    </button>
+                  </>
+                ) : (
+                  'Nessun dato disponibile'
+                )}
+              </div>
+            </div>
+          ) : (
+            categorizedRows.map((categoryGroup, catIdx) => (
+              <div key={categoryGroup.categoryKey} className="panel" style={{ 
+                maxWidth: '100%', 
+                overflow: 'hidden',
+                boxSizing: 'border-box',
+                marginBottom: '20px'
+              }}>
+                {/* Header Categoria */}
+                <div className="category-section-header" style={{
+                  background: 'linear-gradient(135deg, rgba(102, 187, 106, 0.15), rgba(118, 75, 162, 0.15))',
+                  borderTop: '2px solid rgba(102, 187, 106, 0.4)',
+                  borderBottom: '2px solid rgba(102, 187, 106, 0.4)',
+                  padding: '0.7rem 1.5rem',
+                  marginBottom: '0',
+                  fontWeight: '700',
+                  fontSize: '0.95rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1.5px',
+                  color: '#66bb6a'
+                }}>
+                  <span style={{marginRight: '0.75rem'}}>
+                    {categoryGroup.categoryKey === 'employment' ? 'LAVORO' : 
+                     categoryGroup.categoryKey === 'growth' ? 'CRESCITA' : 
+                     categoryGroup.categoryKey === 'stability' ? 'STABILITA' : 'ALTRO'}
+                  </span>
+                  {categoryGroup.categoryLabel}
+                </div>
+
+                {/* Tabella per questa categoria */}
+                <div className="heatmap-container" style={{
+                  maxWidth: '100%',
+                  overflow: 'hidden',
+                  boxSizing: 'border-box'
+                }}>
+                  <div className="heatmap-scroll" style={{
+                    overflowX: 'auto',
+                    overflowY: 'visible',
+                    width: '100%',
+                    maxWidth: '100%',
+                    boxSizing: 'border-box'
+                  }}>
+                    <table className="heatmap-table">
+                      <thead>
+                        <tr>
+                          <th className="indicator-column sticky-col">Indicatore</th>
+                          {periods.map((period, idx) => (
+                            <th key={idx} title={period.fullLabel}>
+                              {period.label}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {categoryGroup.rows.map((row) => (
+                          <React.Fragment key={row.id}>
                     
                     {/* Riga principale */}
                     <tr 
@@ -737,7 +840,7 @@ const HeatmapPage = () => {
                       onClick={() => toggleRowExpansion(row.id)}
                       style={{ cursor: 'pointer' }}
                     >
-                      <td className="indicator-column sticky-col" title={row.name}>
+                      <td className="indicator-column sticky-col" title={`${row.name} - ${row.description || 'Clicca "i" per dettagli'}`}>
                         <div className="indicator-cell">
                           <span className="expand-icon">
                             {expandedRows.has(row.id) ? '▼' : '▶'}
@@ -748,10 +851,10 @@ const HeatmapPage = () => {
                               target="_blank"
                               rel="noopener noreferrer"
                               className="indicator-name-link"
-                              title={`Apri ${row.id} su FRED`}
+                              title={`${row.name} - Apri ${row.id} su FRED`}
                               onClick={(e) => e.stopPropagation()}
                             >
-                              {row.name}
+                              {abbreviateIndicatorName(row.name)}
                             </a>
                           ) : (
                             // Link per indicatori EU (BCE o Eurostat)
@@ -762,10 +865,10 @@ const HeatmapPage = () => {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="indicator-name-link"
-                                title={`Apri ECB Statistics Explorer - Cerca: ${row.id}`}
+                                title={`${row.name} - Apri ECB Statistics Explorer - Cerca: ${row.id}`}
                                 onClick={(e) => e.stopPropagation()}
                               >
-                                {row.name}
+                                {abbreviateIndicatorName(row.name)}
                               </a>
                             ) : (
                               // Indicatore Eurostat (formato senza punti: UNEMPLOYMENT_EA, GDP_EA...)
@@ -774,21 +877,45 @@ const HeatmapPage = () => {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="indicator-name-link"
-                                title={`Apri Eurostat Database Browser`}
+                                title={`${row.name} - Apri Eurostat Database Browser`}
                                 onClick={(e) => e.stopPropagation()}
                               >
-                                {row.name}
+                                {abbreviateIndicatorName(row.name)}
                               </a>
                             )
                           )}
-                          {row.units && <span className="indicator-units">{row.units}</span>}
                           {/* Info tooltip */}
-                          <div className="info-tooltip-wrapper" onClick={(e) => e.stopPropagation()}>
+                          <div 
+                            className="info-tooltip-wrapper" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const wrapper = e.currentTarget;
+                              wrapper.classList.toggle('active');
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.classList.add('active');
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.classList.remove('active');
+                            }}
+                          >
                             <span className="info-icon">i</span>
                             <div className="info-tooltip">
-                              <strong>{row.name}</strong>
-                              <p>{row.description || 'Nessuna descrizione disponibile'}</p>
-                              <small>Serie {region === 'USA' ? 'FRED' : 'ECB/Eurostat'}: {row.id}</small>
+                              <div style={{ marginBottom: '0.5rem' }}>
+                                <strong style={{ color: '#66bb6a', fontSize: '0.9rem' }}>{row.name}</strong>
+                              </div>
+                              <div style={{ marginBottom: '0.5rem', color: '#ccc' }}>
+                                {row.description || 'Nessuna descrizione disponibile'}
+                              </div>
+                              {row.units && (
+                                <div style={{ marginBottom: '0.5rem', fontSize: '0.75rem', color: '#999' }}>
+                                  <strong>Unità:</strong> {row.units}
+                                </div>
+                              )}
+                              <div style={{ fontSize: '0.75rem', color: '#888' }}>
+                                <strong>Fonte:</strong> {region === 'USA' ? 'FRED' : 'ECB/Eurostat'}<br/>
+                                <strong>Serie ID:</strong> {row.id}
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -825,7 +952,6 @@ const HeatmapPage = () => {
                           >
                             {cellData && cellData.changePercent !== null ? (
                               <>
-                                {cellData.changePercent > 0 ? '↑' : cellData.changePercent < 0 ? '↓' : '→'}
                                 {cellData.changePercent >= 0 ? '+' : ''}
                                 {cellData.changePercent.toFixed(2)}%
                               </>
@@ -833,17 +959,16 @@ const HeatmapPage = () => {
                           </td>
                         ))}
                       </tr>
-                    )}
-                  </React.Fragment>
-                );
-                })
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div className="panel tight">
+                            )}
+                          </React.Fragment>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}        <div className="panel tight">
           <div className="heatmap-footer">
             <p className="text-muted">
               <strong>Fonte dati:</strong> {region === 'USA' 
